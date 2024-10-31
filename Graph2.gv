@@ -1,0 +1,7 @@
+digraph Graph2 {
+	TOP
+	TOP -> A
+	A -> E2
+	A -> E3
+	TOP -> E1
+}

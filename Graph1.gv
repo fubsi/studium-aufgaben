@@ -1,0 +1,15 @@
+digraph Graph1 {
+	"K1(AND)"
+	"K1(AND)" -> "K2(AND)"
+	"K2(AND)" -> D
+	"K2(AND)" -> E
+	"K2(AND)" -> "K4(AND)"
+	"K4(AND)" -> "K5(OR)"
+	"K5(OR)" -> A
+	"K5(OR)" -> B
+	"K4(AND)" -> C
+	"K1(AND)" -> NOT
+	NOT -> "K3(OR)"
+	"K3(OR)" -> F
+	"K3(OR)" -> G
+}
