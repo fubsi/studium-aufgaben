@@ -1,0 +1,11 @@
+digraph "Zuverlässigkeitsdiagramm" {
+	Alle
+	subgraph cluster_Alle {
+		node [style=filled]
+		color=blue
+		b0 -> b1
+		b1 -> b2
+		b2 -> b3
+		label="process #2"
+	}
+}
