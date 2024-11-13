@@ -1,5 +1,6 @@
 import graphviz as gv
 import numpy as np
+import matplotlib.pyplot as plt
 
 class EVENT:
     
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     # Create the nodes of Picture 1
     A = EVENT("A", 0.01)
     B = EVENT("B", 0.1)
-    C = EVENT("C", 0.0001)
+    C = EVENT("C", 0.001)
     D = EVENT("D", 0.01)
     E = EVENT("E", 0.01)
     F = EVENT("F", 0.01)
@@ -133,37 +134,52 @@ if __name__ == "__main__":
     graph.view()
 
 
-    for i in range(2):
+    history = []
+    for i in range(1000):
         A = EVENT("A", np.random.normal(0.01, 0.002))
         B = EVENT("B", np.random.normal(0.1, 0.02))
-        C = EVENT("C", np.random.normal(0.0001, 0.002))
+        C = EVENT("C", np.random.normal(0.001, 0.002))
         D = EVENT("D", np.random.normal(0.01, 0.002))
         E = EVENT("E", np.random.normal(0.01, 0.002))
         F = EVENT("F", np.random.normal(0.01, 0.002))
         G = EVENT("G", np.random.normal(0.1, 0.02))
 
-        print(f"A: {A.getFailureProbability()}")
-        print(f"B: {B.getFailureProbability()}")
-        print(f"C: {C.getFailureProbability()}")
-        print(f"D: {D.getFailureProbability()}")
-        print(f"E: {E.getFailureProbability()}")
-        print(f"F: {F.getFailureProbability()}")
-        print(f"G: {G.getFailureProbability()}")
+        K1 = ANDNODE("K1(AND)")
+        K2 = ANDNODE("K2(AND)")
+        NOT = NOTNODE("NOT")
+        K3 = ORNODE("K3(OR)")
+        K4 = ANDNODE("K4(AND)")
+        K5 = ORNODE("K5(OR)")
+
+        # Add the nodes to the respective nodes
+        K1.add(K2)
+        K1.add(NOT)
+        #Left side
+        K2.add(D)
+        K2.add(E)
+        K2.add(K4)
+        K4.add(K5)
+        K4.add(C)
+        K5.add(A)
+        K5.add(B)
+        #Right side
+        NOT.add(K3)
+        K3.add(F)
+        K3.add(G)
+
+        # print(f"A: {A.getFailureProbability()}")
+        # print(f"B: {B.getFailureProbability()}")
+        # print(f"C: {C.getFailureProbability()}")
+        # print(f"D: {D.getFailureProbability()}")
+        # print(f"E: {E.getFailureProbability()}")
+        # print(f"F: {F.getFailureProbability()}")
+        # print(f"G: {G.getFailureProbability()}")
 
         # Calculate the failure probability of the system
         fail = K1.getFailureProbability()
         print(f"The failure probability of the system is: {fail}")
+        history.append(fail)
 
-    # # Create graph of example
-    # TOP = ANDNODE("TOP")
-    # A = ORNODE("A")
-    # E1 = EVENT("E1",0.1)
-    # E2 = EVENT("E2",0.1)
-    # E3 = EVENT("E3",0.1)
-    # TOP.add(A)
-    # TOP.add(E1)
-    # A.add(E2)
-    # A.add(E3)
-    # graph2 = GraphPrint("Graph2")
-    # graph2.create(TOP)
-    # graph2.view()
+    # Create histogram of failure probabilities
+    plt.hist(history, bins=150)
+    plt.show()
