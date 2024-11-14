@@ -68,21 +68,74 @@ class GraphPrint:
     
     def create(self, topBlock):
         self.topBlock = topBlock
-
-        sequence = []
+        prevBlock = None
         for block in topBlock.blocks:
             if isinstance(block, BLOCK):
-                sequence.append(block)
+                self.graph.node(block.name)
             else:
-                sequence.append(self.createSub(block))
+                subgraph = self.createSub(block)
+                self.graph.subgraph(subgraph)
+                if isinstance(block, SEQBLOCK):
+                    if isinstance(prevBlock, BLOCK):
+                        self.graph.edge(prevBlock.name, block.blocks[0].name)
+                    if isinstance(prevBlock, SEQBLOCK):
+                        self.graph.edge(prevBlock.blocks[-1].name, block.blocks[0].name)
+                    if isinstance(prevBlock, PARBLOCK):
+                        for subBlock in prevBlock.blocks:
+                            self.graph.edge(subBlock.name, block.blocks[0].name)
+                else:
+                    for subBlock in block.blocks:
+                        if isinstance(prevBlock, BLOCK):
+                            self.graph.edge(prevBlock.name, subBlock.name)
+                        if isinstance(prevBlock, SEQBLOCK):
+                            self.graph.edge(prevBlock.blocks[-1].name, subBlock.name)
+                        if isinstance(prevBlock, PARBLOCK):
+                            for subBlock2 in prevBlock.blocks:
+                                self.graph.edge(subBlock2.name, subBlock.name)
+            if isinstance(block, BLOCK):
+                if isinstance(prevBlock, SEQBLOCK):
+                    if isinstance(block, BLOCK):
+                        self.graph.edge(prevBlock.blocks[-1].name, block.name)
+                if isinstance(prevBlock, PARBLOCK):
+                    for subBlock in prevBlock.blocks:
+                        if isinstance(block, BLOCK):
+                            self.graph.edge(subBlock.name, block.name)
+                        if isinstance(block, SEQBLOCK):
+                            self.graph.edge(subBlock.name, block.blocks[0].name)
+            prevBlock = block
 
-        for i in range(len(sequence)):
-            if i > 0:
-                firstNode = sequence[i-1]
-                secondNode = sequence[i]
-                self.graph.edge(sequence[i-1].name, sequence[i].name)
-
+        return
+    
     def createSub(self, topBlock):
+        graph = gv.Digraph(name=f"cluster_{topBlock.name}", graph_attr={'label': topBlock.name})
+        if isinstance(topBlock, PARBLOCK):
+            for block in topBlock.blocks:
+                if isinstance(block, BLOCK):
+                    graph.node(block.name)
+                else:
+                    graph.subgraph(self.createSub(block))
+                    if isinstance(block, SEQBLOCK):
+                        self.graph.edge(prevBlock.name, block.blocks[0].name)
+                    else:
+                        for subBlock in block.blocks:
+                            self.graph.edge(prevBlock.name, subBlock.name)
+        if isinstance(topBlock, SEQBLOCK):
+            prevBlock = None
+            for block in topBlock.blocks:
+                if isinstance(block, BLOCK):
+                    graph.node(block.name)
+                    if isinstance(prevBlock, BLOCK):
+                        graph.edge(prevBlock.name, block.name)
+                else:
+                    graph.subgraph(self.createSub(block))
+                    if isinstance(block, SEQBLOCK):
+                        self.graph.edge(prevBlock.name, block.blocks[0].name)
+                    else:
+                        for subBlock in block.blocks:
+                            self.graph.edge(prevBlock.name, subBlock.name)
+                prevBlock = block
+        return graph
+        
     
     def view(self):
         self.graph.view()
@@ -106,7 +159,6 @@ if __name__ == "__main__":
 
     print(seq.rel())
 
-    #graph = GraphPrint()
     graph = GraphPrint("Zuverlässigkeitsdiagramm")
     graph.create(seq)
     graph.view()
