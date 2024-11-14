@@ -178,8 +178,11 @@ if __name__ == "__main__":
         # Calculate the failure probability of the system
         fail = K1.getFailureProbability()
         print(f"The failure probability of the system is: {fail}")
-        history.append(fail)
+        if fail < 0:
+            continue
+        else:
+            history.append(fail)
 
     # Create histogram of failure probabilities
-    plt.hist(history, bins=150)
+    plt.hist(history, bins=50)
     plt.show()
