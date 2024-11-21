@@ -1,11 +1,11 @@
-
+#Folie 20 Kapitel 12 soll helfen
 
 class STATE:
     def __init__(self, name, num):
         self.name = name
         self.num = num
         self.qstates = []
-        self.v = 0.0
+        self.v = 0.0        #gesamtbelohnung
     
     def add(self, qstate):
         self.qstates.append(qstate)
