@@ -35,7 +35,7 @@ class SEQBLOCK:
         availablity = 1
         for block in self.blocks:
             availablity = availablity * block.rel()
-        return 1 - availablity
+        return availablity
     
 class PARBLOCK:
 
