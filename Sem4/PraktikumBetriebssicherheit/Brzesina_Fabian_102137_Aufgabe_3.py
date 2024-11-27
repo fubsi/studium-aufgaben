@@ -1,4 +1,5 @@
 #Folie 20 Kapitel 12 soll helfen
+import graphviz as gv
 
 class STATE:
     def __init__(self, name, num):
@@ -43,24 +44,141 @@ class TRANSITION:
 class MDP:
     def __init__(self, name):
         self.name = name
+        self.states = []
+        self.qstates = []
+        self.transitions = []
 
     def state(self, snode):
-        ...
+        self.states.append(snode)
     
     def qstate(self, qnode):
-        ...
+        self.qstates.append(qnode)
 
     def transition(self, transition):
-        ...
+        self.transitions.append(transition)
     
     def show(self):
         ...
 
     def printnodes(self):
-        ...
+        print('States:')
+        for s in self.states:
+            print(s.name, end=' | ')
+        print('\nQ-States:')
+        for q in self.qstates:
+            print(q.name, end=' | ')
+        print('\nTransitions:')
+        for t in self.transitions:
+            print(t.name, end=' | ')
     
     def utility(self):
         ...
 
+class GraphPrint:
+
+    def __init__(self, objMDP ,name="Graph"):
+        self.MDP = objMDP
+        self.topBlock = None
+        self.graph = gv.Digraph(name=name,format='png')
+
+    def create(self):
+        for state in self.MDP.states:
+            self.graph.node(state.name, shape='triangle')
+        for qstate in self.MDP.qstates:
+            self.graph.node(qstate.name, shape='circle')
+            self.graph.edge(qstate.state.name, qstate.name, label=qstate.action)
+        for transition in self.MDP.transitions:
+            self.graph.edge(transition.source.name, transition.destination.name, label=str(transition.prop))
+    
+    def show(self):
+        self.graph.view()
+
 if __name__ == '__main__':
     M = MDP('Aufgabe3')
+
+    #Zustände
+    S_PARKEN_OI = STATE('Parken o. Inspek.', 1)
+    S_PARKEN_MI = STATE('Parken m. Inspek.', 2)
+    S_FAHREN_OI = STATE('Fahren o. Inspek.', 3)
+    S_FAHREN_MI = STATE('Fahren m. Inspek.', 4)
+    S_INSPEKTION = STATE('Inspektion', 5)
+
+    #Q-Zustände
+    Q_POI_a = QSTATE('Q_FOI_a', S_PARKEN_OI, 'betreiben') #nach Aktion A
+
+    Q_FOI_a = QSTATE('Q_FOI_a', S_FAHREN_OI, 'betreiben') #nach Aktion A
+    Q_FOI_b = QSTATE('Q_FOI_c', S_FAHREN_OI, 'warten') #nach Aktion C (Inspektion)
+
+    Q_I_a = QSTATE('Q_I_a', S_INSPEKTION, 'warten') #nach Aktion A
+
+    Q_FMI_a = QSTATE('Q_FMI_a', S_FAHREN_MI, 'betreiben') #nach Aktion A
+    Q_FMI_b = QSTATE('Q_FMI_d', S_FAHREN_MI, 'warten') #nach Aktion D (Inspektion)
+
+    Q_PMI_a = QSTATE('Q_PMI_a', S_PARKEN_MI, 'betreiben') #nach Aktion A
+
+    #Transitionen
+    T_POI_a = TRANSITION('T_POI_a', Q_POI_a, S_PARKEN_OI, 0.6, 50) 
+    T_POI_b = TRANSITION('T_POI_b', Q_POI_a, S_FAHREN_OI, 0.4, 50)
+
+    T_FOI_a = TRANSITION('T_FOI_a', Q_FOI_a, S_PARKEN_OI, 0.6, 50)
+    T_FOI_b = TRANSITION('T_FOI_b', Q_FOI_a, S_FAHREN_OI, 0.4, 50)
+    T_FOI_c = TRANSITION('T_FOI_c', Q_FOI_b, S_INSPEKTION, 0.006, -200) # 1h/1Woche = 1h/168h = 1/168 = 0.006
+
+    T_I_a = TRANSITION('T_I_a', Q_I_a, S_INSPEKTION, 0.75, -20) # 1 - 1h/4h = 3h/4h = 3/4 = 0.75
+    T_I_b = TRANSITION('T_I_b', Q_I_a, S_FAHREN_MI, 0.25, 500) # 1h/4h = 1/4 = 0.25
+
+    T_FMI_a = TRANSITION('T_FMI_a', Q_FMI_a, S_FAHREN_OI, 0.00057, 50) # 1h/2Jahre = 1h/17520h = 1/17520 = 5,7*10^-5 = 0.000057
+    T_FMI_b = TRANSITION('T_FMI_b', Q_FMI_a, S_FAHREN_MI, 0.399943, 50) # 1-1h/2Jahre-0.6 = 1-1h/17520h-0.6 = 1-1/17520 = 1-5.7*10^-5 -0.6 = 0.999943 - 0.6 = 0.399943
+    T_FMI_c = TRANSITION('T_FMI_c', Q_FMI_a, S_PARKEN_MI, 0.6, 50)
+    T_FMI_d = TRANSITION('T_FMI_d', Q_FMI_b, S_INSPEKTION, 0.00057, -20) #1h/2Jahre
+
+    T_PMI_a = TRANSITION('T_PMI_a', Q_PMI_a, S_PARKEN_OI, 0.00057, 50) #1h/2Jahre
+    T_PMI_b = TRANSITION('T_PMI_b', Q_PMI_a, S_PARKEN_MI, 0.59943, 50) #1h/2Jahre-0.4 = 0.999943-0.4 = 0.59943
+    T_PMI_c = TRANSITION('T_PMI_c', Q_PMI_a, S_FAHREN_MI, 0.4, 50)
+
+    #Zustände hinzufügen
+    M.state(S_PARKEN_OI)
+    M.state(S_PARKEN_MI)
+    M.state(S_FAHREN_OI)
+    M.state(S_FAHREN_MI)
+    M.state(S_INSPEKTION)
+
+    #Q-Zustände hinzufügen
+    M.qstate(Q_POI_a)
+    
+    M.qstate(Q_FOI_a)
+    M.qstate(Q_FOI_b)
+
+    M.qstate(Q_I_a)
+
+    M.qstate(Q_FMI_a)
+    M.qstate(Q_FMI_b)
+
+    M.qstate(Q_PMI_a)
+
+    #Transitionen hinzufügen
+    M.transition(T_POI_a)
+    M.transition(T_POI_b)
+
+    M.transition(T_FOI_a)
+    M.transition(T_FOI_b)
+    M.transition(T_FOI_c)
+
+    M.transition(T_I_a)
+    M.transition(T_I_b)
+    
+    M.transition(T_FMI_a)
+    M.transition(T_FMI_b)
+    M.transition(T_FMI_c)
+    M.transition(T_FMI_d)
+
+    M.transition(T_PMI_a)
+    M.transition(T_PMI_b)
+    M.transition(T_PMI_c)
+
+    M.printnodes()
+
+    #Graphen erstellen
+    G = GraphPrint(M)
+    G.create()
+    G.show()

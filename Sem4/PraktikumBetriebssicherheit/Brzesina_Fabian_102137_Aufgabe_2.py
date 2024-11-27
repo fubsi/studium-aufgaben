@@ -142,18 +142,23 @@ class GraphPrint:
         return
     
 if __name__ == "__main__":
-    E = BLOCK("Eingang", 0.99)
+    E1 = BLOCK("Eingang1", 0.99)
+    E2 = BLOCK("Eingang2", 0.99)
     R1 = BLOCK("Rechner1", 0.99)
     R2 = BLOCK("Rechner2", 0.99)
     A = BLOCK("Ausgang", 0.99)
 
     seq = SEQBLOCK("Alle")
     par = PARBLOCK("Alle Rechner")
+    par2 = PARBLOCK("Eingänge")
 
     par.append(R1)
     par.append(R2)
 
-    seq.append(E)
+    par2.append(E1)
+    par2.append(E2)
+
+    seq.append(par2)
     seq.append(par)
     seq.append(A)
 

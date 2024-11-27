@@ -1,12 +1,18 @@
 digraph "Zuverlässigkeitsdiagramm" {
-	Eingang
+	subgraph "cluster_Eingänge" {
+		graph [label="Eingänge"]
+		Eingang1
+		Eingang2
+	}
 	subgraph "cluster_Alle Rechner" {
 		graph [label="Alle Rechner"]
 		Rechner1
 		Rechner2
 	}
-	Eingang -> Rechner1
-	Eingang -> Rechner2
+	Eingang1 -> Rechner1
+	Eingang2 -> Rechner1
+	Eingang1 -> Rechner2
+	Eingang2 -> Rechner2
 	Ausgang
 	Rechner1 -> Ausgang
 	Rechner2 -> Ausgang
