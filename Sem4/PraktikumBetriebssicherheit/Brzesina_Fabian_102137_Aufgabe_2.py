@@ -63,7 +63,7 @@ class GraphPrint:
 
     def __init__(self, name="Graph"):
         self.topBlock = None
-        self.graph = gv.Digraph(name=name,format='png')
+        self.graph = gv.Digraph(name=name,format='png', graph_attr={'rankdir': 'LR'})
         return
     
     def create(self, topBlock):
