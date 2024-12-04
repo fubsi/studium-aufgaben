@@ -12,6 +12,7 @@ class STATE:
         self.qstates.append(qstate)
 
     def utility(self):
+        self.v = max([q.utility() for q in self.qstates])
         return self.v
     
 class QSTATE:
@@ -29,7 +30,8 @@ class QSTATE:
         self.transitions.append(transition)
     
     def utility(self):
-        ...
+        self.q = sum([t.prop * (t.reward + self.gamma * t.destination.v) for t in self.transitions])
+        return self.q
 
 class TRANSITION:
     def __init__(self, name, source, destination, prop, reward):
@@ -58,21 +60,47 @@ class MDP:
         self.transitions.append(transition)
     
     def show(self):
-        ...
+        G = GraphPrint(self)
+        G.create()
+        G.show()
 
     def printnodes(self):
+        print(f"{'-'*100}")
         print('States:')
         for s in self.states:
             print(s.name, end=' | ')
-        print('\nQ-States:')
+        print(f"\n{'-'*100}")
+        print('Q-States:')
         for q in self.qstates:
             print(q.name, end=' | ')
-        print('\nTransitions:')
+        print(f"\n{'-'*100}")
+        print('Transitions:')
         for t in self.transitions:
             print(t.name, end=' | ')
+        print(f"\n{'-'*100}")
     
     def utility(self):
-        ...
+        print('Utility:')
+        for s in self.states:
+            print(f"{s.name}:{s.utility()}")
+        for q in self.qstates:
+            print(f"{q.name}:{q.q}")
+        print(f"{'-'*100}")
+
+        print('Optimal Strategy for States:')
+        for s in self.states:
+            self.optimalOfState(s)
+        print(f"{'-'*100}")
+
+        print('Optimal Strategy:')
+        for s in self.states:
+            sum([t.prop * (t.reward + q.gamma * t.destination.v) for t in self.transitions])
+            
+    def optimalOfState(self, state):
+        maxQ = max([q.utility() for q in state.qstates])
+        for q in state.qstates:
+            if q.utility() == maxQ:
+                return q
 
 class GraphPrint:
 
@@ -86,7 +114,7 @@ class GraphPrint:
             self.graph.node(state.name, shape='triangle')
         for qstate in self.MDP.qstates:
             self.graph.node(qstate.name, shape='circle')
-            self.graph.edge(qstate.state.name, qstate.name, label=qstate.action)
+            self.graph.edge(qstate.state.name, qstate.name, label=qstate.action, color='red')
         for transition in self.MDP.transitions:
             self.graph.edge(transition.source.name, transition.destination.name, label=str(transition.prop))
     
@@ -105,36 +133,57 @@ if __name__ == '__main__':
 
     #Q-Zustände
     Q_POI_a = QSTATE('Q_FOI_a', S_PARKEN_OI, 'betreiben') #nach Aktion A
+    S_PARKEN_OI.add(Q_POI_a)
 
     Q_FOI_a = QSTATE('Q_FOI_a', S_FAHREN_OI, 'betreiben') #nach Aktion A
     Q_FOI_b = QSTATE('Q_FOI_c', S_FAHREN_OI, 'warten') #nach Aktion C (Inspektion)
+    S_FAHREN_OI.add(Q_FOI_a)
+    S_FAHREN_OI.add(Q_FOI_b)
 
     Q_I_a = QSTATE('Q_I_a', S_INSPEKTION, 'warten') #nach Aktion A
+    S_INSPEKTION.add(Q_I_a)
 
     Q_FMI_a = QSTATE('Q_FMI_a', S_FAHREN_MI, 'betreiben') #nach Aktion A
     Q_FMI_b = QSTATE('Q_FMI_d', S_FAHREN_MI, 'warten') #nach Aktion D (Inspektion)
+    S_FAHREN_MI.add(Q_FMI_a)
+    S_FAHREN_MI.add(Q_FMI_b)
 
     Q_PMI_a = QSTATE('Q_PMI_a', S_PARKEN_MI, 'betreiben') #nach Aktion A
+    S_PARKEN_MI.add(Q_PMI_a)
 
     #Transitionen
     T_POI_a = TRANSITION('T_POI_a', Q_POI_a, S_PARKEN_OI, 0.6, 50) 
     T_POI_b = TRANSITION('T_POI_b', Q_POI_a, S_FAHREN_OI, 0.4, 50)
+    Q_POI_a.add(T_POI_a)
+    Q_POI_a.add(T_POI_b)
 
     T_FOI_a = TRANSITION('T_FOI_a', Q_FOI_a, S_PARKEN_OI, 0.6, 50)
     T_FOI_b = TRANSITION('T_FOI_b', Q_FOI_a, S_FAHREN_OI, 0.4, 50)
     T_FOI_c = TRANSITION('T_FOI_c', Q_FOI_b, S_INSPEKTION, 0.006, -200) # 1h/1Woche = 1h/168h = 1/168 = 0.006
+    Q_FOI_a.add(T_FOI_a)
+    Q_FOI_a.add(T_FOI_b)
+    Q_FOI_b.add(T_FOI_c)
 
     T_I_a = TRANSITION('T_I_a', Q_I_a, S_INSPEKTION, 0.75, -20) # 1 - 1h/4h = 3h/4h = 3/4 = 0.75
     T_I_b = TRANSITION('T_I_b', Q_I_a, S_FAHREN_MI, 0.25, 500) # 1h/4h = 1/4 = 0.25
+    Q_I_a.add(T_I_a)
+    Q_I_a.add(T_I_b)
 
     T_FMI_a = TRANSITION('T_FMI_a', Q_FMI_a, S_FAHREN_OI, 0.00057, 50) # 1h/2Jahre = 1h/17520h = 1/17520 = 5,7*10^-5 = 0.000057
     T_FMI_b = TRANSITION('T_FMI_b', Q_FMI_a, S_FAHREN_MI, 0.399943, 50) # 1-1h/2Jahre-0.6 = 1-1h/17520h-0.6 = 1-1/17520 = 1-5.7*10^-5 -0.6 = 0.999943 - 0.6 = 0.399943
     T_FMI_c = TRANSITION('T_FMI_c', Q_FMI_a, S_PARKEN_MI, 0.6, 50)
     T_FMI_d = TRANSITION('T_FMI_d', Q_FMI_b, S_INSPEKTION, 0.00057, -20) #1h/2Jahre
+    Q_FMI_a.add(T_FMI_a)
+    Q_FMI_a.add(T_FMI_b)
+    Q_FMI_a.add(T_FMI_c)
+    Q_FMI_b.add(T_FMI_d)
 
     T_PMI_a = TRANSITION('T_PMI_a', Q_PMI_a, S_PARKEN_OI, 0.00057, 50) #1h/2Jahre
     T_PMI_b = TRANSITION('T_PMI_b', Q_PMI_a, S_PARKEN_MI, 0.59943, 50) #1h/2Jahre-0.4 = 0.999943-0.4 = 0.59943
     T_PMI_c = TRANSITION('T_PMI_c', Q_PMI_a, S_FAHREN_MI, 0.4, 50)
+    Q_PMI_a.add(T_PMI_a)
+    Q_PMI_a.add(T_PMI_b)
+    Q_PMI_a.add(T_PMI_c)
 
     #Zustände hinzufügen
     M.state(S_PARKEN_OI)
@@ -179,6 +228,7 @@ if __name__ == '__main__':
     M.printnodes()
 
     #Graphen erstellen
-    G = GraphPrint(M)
-    G.create()
-    G.show()
+    M.show()
+
+    #Utility berechnen
+    M.utility()
