@@ -89,18 +89,30 @@ class MDP:
 
         print('Optimal Strategy for States:')
         for s in self.states:
-            self.optimalOfState(s)
+            print(f"{s.name} mit {self.optimalOfState(s).action} -> {self.optimalOfState(s).name}")
         print(f"{'-'*100}")
 
         print('Optimal Strategy:')
-        for s in self.states:
-            sum([t.prop * (t.reward + q.gamma * t.destination.v) for t in self.transitions])
+        nextState = self.states[0]
+
+        for i in range(10):
+            nextOptimal = self.optimalOfState(nextState)
+            print(f"Step {i+1}: {nextState.name} mit {nextOptimal.action} -> {nextOptimal.name}", end='')
+            for t in self.transitions:
+                if t.source.state == nextState and t.source == nextOptimal and t.source.action == nextOptimal.action:
+                    nextState = t.destination
+            print(f" -> {nextState.name}")
             
     def optimalOfState(self, state):
         maxQ = max([q.utility() for q in state.qstates])
         for q in state.qstates:
             if q.utility() == maxQ:
                 return q
+            
+    def valueIteration(self, state):
+        for i in range(100):
+            for q in state.qstates:
+                q.utility()
 
 class GraphPrint:
 
@@ -116,7 +128,7 @@ class GraphPrint:
             self.graph.node(qstate.name, shape='circle')
             self.graph.edge(qstate.state.name, qstate.name, label=qstate.action, color='red')
         for transition in self.MDP.transitions:
-            self.graph.edge(transition.source.name, transition.destination.name, label=str(transition.prop))
+            self.graph.edge(transition.source.name, transition.destination.name, label=f"{str(transition.prop)}")
     
     def show(self):
         self.graph.view()
@@ -132,11 +144,11 @@ if __name__ == '__main__':
     S_INSPEKTION = STATE('Inspektion', 5)
 
     #Q-Zustände
-    Q_POI_a = QSTATE('Q_FOI_a', S_PARKEN_OI, 'betreiben') #nach Aktion A
+    Q_POI_a = QSTATE('Q_POI_a', S_PARKEN_OI, 'betreiben') #nach Aktion A
     S_PARKEN_OI.add(Q_POI_a)
 
     Q_FOI_a = QSTATE('Q_FOI_a', S_FAHREN_OI, 'betreiben') #nach Aktion A
-    Q_FOI_b = QSTATE('Q_FOI_c', S_FAHREN_OI, 'warten') #nach Aktion C (Inspektion)
+    Q_FOI_b = QSTATE('Q_FOI_b', S_FAHREN_OI, 'warten') #nach Aktion B (Inspektion)
     S_FAHREN_OI.add(Q_FOI_a)
     S_FAHREN_OI.add(Q_FOI_b)
 
@@ -144,7 +156,7 @@ if __name__ == '__main__':
     S_INSPEKTION.add(Q_I_a)
 
     Q_FMI_a = QSTATE('Q_FMI_a', S_FAHREN_MI, 'betreiben') #nach Aktion A
-    Q_FMI_b = QSTATE('Q_FMI_d', S_FAHREN_MI, 'warten') #nach Aktion D (Inspektion)
+    Q_FMI_b = QSTATE('Q_FMI_b', S_FAHREN_MI, 'warten') #nach Aktion B (Inspektion)
     S_FAHREN_MI.add(Q_FMI_a)
     S_FAHREN_MI.add(Q_FMI_b)
 
