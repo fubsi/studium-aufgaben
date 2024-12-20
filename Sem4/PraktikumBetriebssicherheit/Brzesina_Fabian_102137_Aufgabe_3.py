@@ -12,7 +12,7 @@ class STATE:
         self.qstates.append(qstate)
 
     def utility(self):
-        self.v = max([q.utility() for q in self.qstates])
+        self.v = MDP._optimalStateReward(MDP, state=self, depth=0)
         return self.v
     
 class QSTATE:
@@ -30,7 +30,7 @@ class QSTATE:
         self.transitions.append(transition)
     
     def utility(self):
-        self.q = sum([t.prop * (t.reward + self.gamma * t.destination.v) for t in self.transitions])
+        self.q = MDP._optimalActionReward(MDP, self.state, self.action, 0)
         return self.q
 
 class TRANSITION:
@@ -44,6 +44,8 @@ class TRANSITION:
         self.reward = reward
 
 class MDP:
+    MAX_DEPTH = 10
+
     def __init__(self, name):
         self.name = name
         self.states = []
@@ -66,6 +68,8 @@ class MDP:
 
     def printnodes(self):
         print(f"{'-'*100}")
+        print(f"{'|'*47}Nodes{'|'*48}")
+        print(f"{'-'*100}")
         print('States:')
         for s in self.states:
             print(s.name, end=' | ')
@@ -80,39 +84,66 @@ class MDP:
         print(f"\n{'-'*100}")
     
     def utility(self):
-        print('Utility:')
         for s in self.states:
-            print(f"{s.name}:{s.utility()}")
+            s.utility()
         for q in self.qstates:
-            print(f"{q.name}:{q.q}")
-        print(f"{'-'*100}")
+            q.utility()
 
-        print('Optimal Strategy for States:')
+        print(f"{'|'*45}Belohnungen{'|'*45}")
+        print(f"{'-'*100}")
+        print('States:')
         for s in self.states:
-            print(f"{s.name} mit {self.optimalOfState(s).action} -> {self.optimalOfState(s).name}")
+            print(f"{s.name}: {round(s.v, 2)}")
+        print(f"\n{'-'*100}")
+        print('Q-States:')
+        for q in self.qstates:
+            print(f"{q.name}: {round(q.q, 2)}")
+        print(f"\n{'-'*100}")
+
+        print(f"{'|'*46}Optimum{'|'*47}")
+
+        print(f"{'-'*100}")
+        print('Optimal Strategies for States:')
+        for s in self.states:
+            optimal = MDP._optimalStateStrategy(MDP, s)
+            print(f"{s.name}: {optimal.action} -> {optimal.name}")
+
+        print(f"{'-'*100}")
+        print('Optimal Rewards for States:')
+        for s in self.states:
+            optimal = MDP._optimalReward(MDP, s, 0)
+            print(f"{s.name}: {round(optimal, 2)}")
         print(f"{'-'*100}")
 
-        print('Optimal Strategy:')
-        nextState = self.states[0]
-
-        for i in range(10):
-            nextOptimal = self.optimalOfState(nextState)
-            print(f"Step {i+1}: {nextState.name} mit {nextOptimal.action} -> {nextOptimal.name}", end='')
-            for t in self.transitions:
-                if t.source.state == nextState and t.source == nextOptimal and t.source.action == nextOptimal.action:
-                    nextState = t.destination
-            print(f" -> {nextState.name}")
-            
-    def optimalOfState(self, state):
-        maxQ = max([q.utility() for q in state.qstates])
+    def _optimalStateReward(self, state, depth):
+        if depth >= self.MAX_DEPTH:
+            return 0
+        return max([self._optimalActionReward(self, state, q.action, depth+1) for q in state.qstates])
+    
+    def _optimalActionReward(self, state, action, depth):
+        qstate = None
         for q in state.qstates:
-            if q.utility() == maxQ:
+            if q.action == action:
+                qstate = q
+                break
+        return sum([t.prop * ((q.gamma**depth) * t.reward + q.gamma * self._optimalStateReward(self, t.destination, depth+1)) for t in qstate.transitions])
+    
+    def _optimalStateStrategy(self, state):
+        qmax = max([q.q for q in state.qstates])
+        for q in state.qstates:
+            if q.q == qmax:
                 return q
             
-    def valueIteration(self, state):
-        for i in range(100):
-            for q in state.qstates:
-                q.utility()
+    def _optimalReward(self, state, depth):
+        if depth >= self.MAX_DEPTH:
+            return 0
+
+        optimal = self._optimalStateStrategy(self, state)
+        return sum([t.prop * ((optimal.gamma**depth) * t.reward + optimal.gamma * self._optimalReward(self, t.destination, depth+1)) for t in optimal.transitions])
+    
+    def _optimalRewardPath(self, state, depth):
+        ...
+
 
 class GraphPrint:
 
