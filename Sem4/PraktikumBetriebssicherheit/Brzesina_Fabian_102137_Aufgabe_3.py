@@ -79,11 +79,6 @@ class MDP:
         print(f"\n{'-'*100}")
 
     def utility(self):
-        # Value Iteration
-        for _ in range(100):  # Adjust the number of iterations as needed
-            for state in self.states:
-                state.utility()
-
         print('Utility:')
         for s in self.states:
             print(f"{s.name}:{s.utility()}")
@@ -96,16 +91,21 @@ class MDP:
             print(f"{s.name} mit {self.optimalOfState(s).action} -> {self.optimalOfState(s).name}")
         print(f"{'-'*100}")
 
-        print('Optimal Strategy:')
-        nextState = self.states[0]
+        print('Optimal Utility after Value Iteration:')
+        for _ in range(1000):
+            for s in self.states:
+                s.utility()
 
-        for i in range(10):
-            nextOptimal = self.optimalOfState(nextState)
-            print(f"Step {i+1}: {nextState.name} mit {nextOptimal.action} -> {nextOptimal.name}", end='')
-            for t in self.transitions:
-                if t.source.state == nextState and t.source == nextOptimal and t.source.action == nextOptimal.action:
-                    nextState = t.destination
-            print(f" -> {nextState.name}")
+        for s in self.states:
+            print(f"{s.name}:{s.utility()}")
+        for q in self.qstates:
+            print(f"{q.name}:{q.q}")
+        print(f"{'-'*100}")
+
+        print('Optimal Strategy following Value Iteration:')
+        for s in self.states:
+            print(f"{s.name} mit {self.optimalOfState(s).action} -> {self.optimalOfState(s).name}")
+        print(f"{'-'*100}")
 
     def optimalOfState(self, state):
         maxQ = max([q.utility() for q in state.qstates])
@@ -127,7 +127,7 @@ class GraphPrint:
             self.graph.node(qstate.name, shape='circle')
             self.graph.edge(qstate.state.name, qstate.name, label=qstate.action, color='red')
         for transition in self.MDP.transitions:
-            self.graph.edge(transition.source.name, transition.destination.name, label=f"{str(transition.prop)}")
+            self.graph.edge(transition.source.name, transition.destination.name, label=f"{transition.name} - {str(transition.prop)} mit Reward {str(transition.reward)}")
 
     def show(self):
         self.graph.view()
@@ -163,12 +163,12 @@ if __name__ == '__main__':
     S_PARKEN_MI.add(Q_PMI_a)
 
     #Transitionen
-    T_POI_a = TRANSITION('T_POI_a', Q_POI_a, S_PARKEN_OI, 0.6, 50) 
+    T_POI_a = TRANSITION('T_POI_a', Q_POI_a, S_PARKEN_OI, 0.6, 0) 
     T_POI_b = TRANSITION('T_POI_b', Q_POI_a, S_FAHREN_OI, 0.4, 50)
     Q_POI_a.add(T_POI_a)
     Q_POI_a.add(T_POI_b)
 
-    T_FOI_a = TRANSITION('T_FOI_a', Q_FOI_a, S_PARKEN_OI, 0.6, 50)
+    T_FOI_a = TRANSITION('T_FOI_a', Q_FOI_a, S_PARKEN_OI, 0.6, 0)
     T_FOI_b = TRANSITION('T_FOI_b', Q_FOI_a, S_FAHREN_OI, 0.4, 50)
     T_FOI_c = TRANSITION('T_FOI_c', Q_FOI_b, S_INSPEKTION, 0.006, -200) # 1h/1Woche = 1h/168h = 1/168 = 0.006
     Q_FOI_a.add(T_FOI_a)
@@ -182,15 +182,15 @@ if __name__ == '__main__':
 
     T_FMI_a = TRANSITION('T_FMI_a', Q_FMI_a, S_FAHREN_OI, 0.00057, 50) # 1h/2Jahre = 1h/17520h = 1/17520 = 5,7*10^-5 = 0.000057
     T_FMI_b = TRANSITION('T_FMI_b', Q_FMI_a, S_FAHREN_MI, 0.399943, 50) # 1-1h/2Jahre-0.6 = 1-1h/17520h-0.6 = 1-1/17520 = 1-5.7*10^-5 -0.6 = 0.999943 - 0.6 = 0.399943
-    T_FMI_c = TRANSITION('T_FMI_c', Q_FMI_a, S_PARKEN_MI, 0.6, 50)
+    T_FMI_c = TRANSITION('T_FMI_c', Q_FMI_a, S_PARKEN_MI, 0.6, 0)
     T_FMI_d = TRANSITION('T_FMI_d', Q_FMI_b, S_INSPEKTION, 0.00057, -20) #1h/2Jahre
     Q_FMI_a.add(T_FMI_a)
     Q_FMI_a.add(T_FMI_b)
     Q_FMI_a.add(T_FMI_c)
     Q_FMI_b.add(T_FMI_d)
 
-    T_PMI_a = TRANSITION('T_PMI_a', Q_PMI_a, S_PARKEN_OI, 0.00057, 50) #1h/2Jahre
-    T_PMI_b = TRANSITION('T_PMI_b', Q_PMI_a, S_PARKEN_MI, 0.59943, 50) #1h/2Jahre-0.4 = 0.999943-0.4 = 0.59943
+    T_PMI_a = TRANSITION('T_PMI_a', Q_PMI_a, S_PARKEN_OI, 0.00057, 0) #1h/2Jahre
+    T_PMI_b = TRANSITION('T_PMI_b', Q_PMI_a, S_PARKEN_MI, 0.59943, 0) #1h/2Jahre-0.4 = 0.999943-0.4 = 0.59943
     T_PMI_c = TRANSITION('T_PMI_c', Q_PMI_a, S_FAHREN_MI, 0.4, 50)
     Q_PMI_a.add(T_PMI_a)
     Q_PMI_a.add(T_PMI_b)
