@@ -1,20 +1,19 @@
-#Folie 20 Kapitel 12 soll helfen
 import graphviz as gv
 
 class STATE:
     def __init__(self, name, num):
         self.name = name
-        self.num = num
+        self.num = num 
         self.qstates = []
-        self.v = 0.0        #gesamtbelohnung
-    
+        self.v = 0.0  # gesamtbelohnung
+
     def add(self, qstate):
         self.qstates.append(qstate)
 
     def utility(self):
         self.v = max([q.utility() for q in self.qstates])
         return self.v
-    
+
 class QSTATE:
     def __init__(self, name, state, action):
         if not isinstance(state, STATE):
@@ -25,10 +24,10 @@ class QSTATE:
         self.transitions = []
         self.q = 0.0
         self.gamma = 0.9
-        
+
     def add(self, transition):
         self.transitions.append(transition)
-    
+
     def utility(self):
         self.q = sum([t.prop * (t.reward + self.gamma * t.destination.v) for t in self.transitions])
         return self.q
@@ -52,13 +51,13 @@ class MDP:
 
     def state(self, snode):
         self.states.append(snode)
-    
+
     def qstate(self, qnode):
         self.qstates.append(qnode)
 
     def transition(self, transition):
         self.transitions.append(transition)
-    
+
     def show(self):
         G = GraphPrint(self)
         G.create()
@@ -78,8 +77,13 @@ class MDP:
         for t in self.transitions:
             print(t.name, end=' | ')
         print(f"\n{'-'*100}")
-    
+
     def utility(self):
+        # Value Iteration
+        for _ in range(100):  # Adjust the number of iterations as needed
+            for state in self.states:
+                state.utility()
+
         print('Utility:')
         for s in self.states:
             print(f"{s.name}:{s.utility()}")
@@ -102,24 +106,19 @@ class MDP:
                 if t.source.state == nextState and t.source == nextOptimal and t.source.action == nextOptimal.action:
                     nextState = t.destination
             print(f" -> {nextState.name}")
-            
+
     def optimalOfState(self, state):
         maxQ = max([q.utility() for q in state.qstates])
         for q in state.qstates:
             if q.utility() == maxQ:
                 return q
-            
-    def valueIteration(self, state):
-        for i in range(100):
-            for q in state.qstates:
-                q.utility()
 
 class GraphPrint:
 
-    def __init__(self, objMDP ,name="Graph"):
+    def __init__(self, objMDP, name="Graph"):
         self.MDP = objMDP
         self.topBlock = None
-        self.graph = gv.Digraph(name=name,format='png')
+        self.graph = gv.Digraph(name=name, format='png')
 
     def create(self):
         for state in self.MDP.states:
@@ -129,7 +128,7 @@ class GraphPrint:
             self.graph.edge(qstate.state.name, qstate.name, label=qstate.action, color='red')
         for transition in self.MDP.transitions:
             self.graph.edge(transition.source.name, transition.destination.name, label=f"{str(transition.prop)}")
-    
+
     def show(self):
         self.graph.view()
 
