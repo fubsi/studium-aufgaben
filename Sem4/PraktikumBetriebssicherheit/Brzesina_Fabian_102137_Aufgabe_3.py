@@ -11,7 +11,7 @@ class STATE:
         self.qstates.append(qstate)
 
     def utility(self):
-        self.v = max([q.utility() for q in self.qstates])
+        self.v = max([q.utility() for q in self.qstates])ß
         return self.v
 
 class QSTATE:
