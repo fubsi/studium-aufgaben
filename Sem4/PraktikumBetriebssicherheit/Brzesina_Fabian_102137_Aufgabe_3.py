@@ -1,20 +1,19 @@
-#Folie 20 Kapitel 12 soll helfen
 import graphviz as gv
 
 class STATE:
     def __init__(self, name, num):
         self.name = name
-        self.num = num
+        self.num = num 
         self.qstates = []
-        self.v = 0.0        #gesamtbelohnung
-    
+        self.v = 0.0  # gesamtbelohnung
+
     def add(self, qstate):
         self.qstates.append(qstate)
 
     def utility(self):
         self.v = MDP._optimalStateReward(MDP, state=self, depth=0)
         return self.v
-    
+
 class QSTATE:
     def __init__(self, name, state, action):
         if not isinstance(state, STATE):
@@ -25,10 +24,10 @@ class QSTATE:
         self.transitions = []
         self.q = 0.0
         self.gamma = 0.9
-        
+
     def add(self, transition):
         self.transitions.append(transition)
-    
+
     def utility(self):
         self.q = MDP._optimalActionReward(MDP, self.state, self.action, 0)
         return self.q
@@ -54,13 +53,13 @@ class MDP:
 
     def state(self, snode):
         self.states.append(snode)
-    
+
     def qstate(self, qnode):
         self.qstates.append(qnode)
 
     def transition(self, transition):
         self.transitions.append(transition)
-    
+
     def show(self):
         G = GraphPrint(self)
         G.create()
@@ -82,7 +81,7 @@ class MDP:
         for t in self.transitions:
             print(t.name, end=' | ')
         print(f"\n{'-'*100}")
-    
+
     def utility(self):
         for s in self.states:
             s.utility()
@@ -115,13 +114,24 @@ class MDP:
             print(f"{s.name}: {round(optimal, 2)}")
         print(f"{'-'*100}")
 
-    def _optimalStateReward(self, state, depth):
-        if depth >= self.MAX_DEPTH:
-            return 0
-        return max([self._optimalActionReward(self, state, q.action, depth+1) for q in state.qstates])
-    
-    def _optimalActionReward(self, state, action, depth):
-        qstate = None
+        print('Optimal Utility after Value Iteration:')
+        for _ in range(1000):
+            for s in self.states:
+                s.utility()
+
+        for s in self.states:
+            print(f"{s.name}:{s.utility()}")
+        for q in self.qstates:
+            print(f"{q.name}:{q.q}")
+        print(f"{'-'*100}")
+
+        print('Optimal Strategy following Value Iteration:')
+        for s in self.states:
+            print(f"{s.name} mit {self.optimalOfState(s).action} -> {self.optimalOfState(s).name}")
+        print(f"{'-'*100}")
+
+    def optimalOfState(self, state):
+        maxQ = max([q.utility() for q in state.qstates])
         for q in state.qstates:
             if q.action == action:
                 qstate = q
@@ -133,24 +143,13 @@ class MDP:
         for q in state.qstates:
             if q.q == qmax:
                 return q
-            
-    def _optimalReward(self, state, depth):
-        if depth >= self.MAX_DEPTH:
-            return 0
-
-        optimal = self._optimalStateStrategy(self, state)
-        return sum([t.prop * ((optimal.gamma**depth) * t.reward + optimal.gamma * self._optimalReward(self, t.destination, depth+1)) for t in optimal.transitions])
-    
-    def _optimalRewardPath(self, state, depth):
-        ...
-
 
 class GraphPrint:
 
-    def __init__(self, objMDP ,name="Graph"):
+    def __init__(self, objMDP, name="Graph"):
         self.MDP = objMDP
         self.topBlock = None
-        self.graph = gv.Digraph(name=name,format='png')
+        self.graph = gv.Digraph(name=name, format='png')
 
     def create(self):
         for state in self.MDP.states:
@@ -159,8 +158,8 @@ class GraphPrint:
             self.graph.node(qstate.name, shape='circle')
             self.graph.edge(qstate.state.name, qstate.name, label=qstate.action, color='red')
         for transition in self.MDP.transitions:
-            self.graph.edge(transition.source.name, transition.destination.name, label=f"{str(transition.prop)}")
-    
+            self.graph.edge(transition.source.name, transition.destination.name, label=f"{transition.name} - {str(transition.prop)} mit Reward {str(transition.reward)}")
+
     def show(self):
         self.graph.view()
 
@@ -195,12 +194,12 @@ if __name__ == '__main__':
     S_PARKEN_MI.add(Q_PMI_a)
 
     #Transitionen
-    T_POI_a = TRANSITION('T_POI_a', Q_POI_a, S_PARKEN_OI, 0.6, 50) 
+    T_POI_a = TRANSITION('T_POI_a', Q_POI_a, S_PARKEN_OI, 0.6, 0) 
     T_POI_b = TRANSITION('T_POI_b', Q_POI_a, S_FAHREN_OI, 0.4, 50)
     Q_POI_a.add(T_POI_a)
     Q_POI_a.add(T_POI_b)
 
-    T_FOI_a = TRANSITION('T_FOI_a', Q_FOI_a, S_PARKEN_OI, 0.6, 50)
+    T_FOI_a = TRANSITION('T_FOI_a', Q_FOI_a, S_PARKEN_OI, 0.6, 0)
     T_FOI_b = TRANSITION('T_FOI_b', Q_FOI_a, S_FAHREN_OI, 0.4, 50)
     T_FOI_c = TRANSITION('T_FOI_c', Q_FOI_b, S_INSPEKTION, 0.006, -200) # 1h/1Woche = 1h/168h = 1/168 = 0.006
     Q_FOI_a.add(T_FOI_a)
@@ -214,15 +213,15 @@ if __name__ == '__main__':
 
     T_FMI_a = TRANSITION('T_FMI_a', Q_FMI_a, S_FAHREN_OI, 0.00057, 50) # 1h/2Jahre = 1h/17520h = 1/17520 = 5,7*10^-5 = 0.000057
     T_FMI_b = TRANSITION('T_FMI_b', Q_FMI_a, S_FAHREN_MI, 0.399943, 50) # 1-1h/2Jahre-0.6 = 1-1h/17520h-0.6 = 1-1/17520 = 1-5.7*10^-5 -0.6 = 0.999943 - 0.6 = 0.399943
-    T_FMI_c = TRANSITION('T_FMI_c', Q_FMI_a, S_PARKEN_MI, 0.6, 50)
+    T_FMI_c = TRANSITION('T_FMI_c', Q_FMI_a, S_PARKEN_MI, 0.6, 0)
     T_FMI_d = TRANSITION('T_FMI_d', Q_FMI_b, S_INSPEKTION, 0.00057, -20) #1h/2Jahre
     Q_FMI_a.add(T_FMI_a)
     Q_FMI_a.add(T_FMI_b)
     Q_FMI_a.add(T_FMI_c)
     Q_FMI_b.add(T_FMI_d)
 
-    T_PMI_a = TRANSITION('T_PMI_a', Q_PMI_a, S_PARKEN_OI, 0.00057, 50) #1h/2Jahre
-    T_PMI_b = TRANSITION('T_PMI_b', Q_PMI_a, S_PARKEN_MI, 0.59943, 50) #1h/2Jahre-0.4 = 0.999943-0.4 = 0.59943
+    T_PMI_a = TRANSITION('T_PMI_a', Q_PMI_a, S_PARKEN_OI, 0.00057, 0) #1h/2Jahre
+    T_PMI_b = TRANSITION('T_PMI_b', Q_PMI_a, S_PARKEN_MI, 0.59943, 0) #1h/2Jahre-0.4 = 0.999943-0.4 = 0.59943
     T_PMI_c = TRANSITION('T_PMI_c', Q_PMI_a, S_FAHREN_MI, 0.4, 50)
     Q_PMI_a.add(T_PMI_a)
     Q_PMI_a.add(T_PMI_b)
