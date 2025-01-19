@@ -11,7 +11,7 @@ class STATE:
         self.qstates.append(qstate)
 
     def utility(self):
-        self.v = MDP._optimalStateReward(MDP, state=self, depth=0)
+        self.v = max([q.utility() for q in self.qstates])
         return self.v
 
 class QSTATE:
@@ -29,7 +29,7 @@ class QSTATE:
         self.transitions.append(transition)
 
     def utility(self):
-        self.q = MDP._optimalActionReward(MDP, self.state, self.action, 0)
+        self.q = sum([t.prop * (t.reward + self.gamma * t.destination.v) for t in self.transitions])
         return self.q
 
 class TRANSITION:
@@ -43,8 +43,6 @@ class TRANSITION:
         self.reward = reward
 
 class MDP:
-    MAX_DEPTH = 10
-
     def __init__(self, name):
         self.name = name
         self.states = []
@@ -67,8 +65,6 @@ class MDP:
 
     def printnodes(self):
         print(f"{'-'*100}")
-        print(f"{'|'*47}Nodes{'|'*48}")
-        print(f"{'-'*100}")
         print('States:')
         for s in self.states:
             print(s.name, end=' | ')
@@ -83,35 +79,16 @@ class MDP:
         print(f"\n{'-'*100}")
 
     def utility(self):
+        print('Utility:')
         for s in self.states:
-            s.utility()
+            print(f"{s.name}:{s.utility()}")
         for q in self.qstates:
-            q.utility()
-
-        print(f"{'|'*45}Belohnungen{'|'*45}")
+            print(f"{q.name}:{q.q}")
         print(f"{'-'*100}")
-        print('States:')
-        for s in self.states:
-            print(f"{s.name}: {round(s.v, 2)}")
-        print(f"\n{'-'*100}")
-        print('Q-States:')
-        for q in self.qstates:
-            print(f"{q.name}: {round(q.q, 2)}")
-        print(f"\n{'-'*100}")
 
-        print(f"{'|'*46}Optimum{'|'*47}")
-
-        print(f"{'-'*100}")
-        print('Optimal Strategies for States:')
+        print('Optimal Strategy for States:')
         for s in self.states:
-            optimal = MDP._optimalStateStrategy(MDP, s)
-            print(f"{s.name}: {optimal.action} -> {optimal.name}")
-
-        print(f"{'-'*100}")
-        print('Optimal Rewards for States:')
-        for s in self.states:
-            optimal = MDP._optimalReward(MDP, s, 0)
-            print(f"{s.name}: {round(optimal, 2)}")
+            print(f"{s.name} mit {self.optimalOfState(s).action} -> {self.optimalOfState(s).name}")
         print(f"{'-'*100}")
 
         print('Optimal Utility after Value Iteration:')
@@ -133,15 +110,7 @@ class MDP:
     def optimalOfState(self, state):
         maxQ = max([q.utility() for q in state.qstates])
         for q in state.qstates:
-            if q.action == action:
-                qstate = q
-                break
-        return sum([t.prop * ((q.gamma**depth) * t.reward + q.gamma * self._optimalStateReward(self, t.destination, depth+1)) for t in qstate.transitions])
-    
-    def _optimalStateStrategy(self, state):
-        qmax = max([q.q for q in state.qstates])
-        for q in state.qstates:
-            if q.q == qmax:
+            if q.utility() == maxQ:
                 return q
 
 class GraphPrint:
