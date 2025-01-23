@@ -89,7 +89,7 @@ class MDP:
         print(f"{'-'*100}")
 
         print('Optimal Utility after Value Iteration:')
-        for _ in range(100):
+        for _ in range(1000):
             for q in self.qstates:
                 q.utility()
             for s in self.states:
