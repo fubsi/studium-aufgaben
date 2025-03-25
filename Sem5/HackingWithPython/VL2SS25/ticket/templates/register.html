@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Login
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <form action="{{ url_for('register_page') }}" method="post">
+        <div class="mb-3">
+            <label for="Username" class="form-label">Username address</label>
+            <input type="text" class="form-control" id="Username" aria-describedby="usernameHelp">
+            <div id="usernameHelp" class="form-text">We'll never share your username with anyone else.</div>
+        </div>
+        <div class="mb-3">
+            <label for="Password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="Password">
+        </div>
+        <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+</div>
+{% endblock %}
