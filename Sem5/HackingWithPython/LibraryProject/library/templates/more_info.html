@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}
+More Info - Library (EA)
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Mehr Informationen</h1>
+    <p>Titel: {{ book[1] }}</p>
+    <p>Autor: {{ book[2] }}</p>
+    <p>Genre: {{ book[3] }}</p>
+    <p>Jahr: {{ book[4] }}</p>
+    <p>Beschreibung: {{ book[5] }}</p>
+    <a class="btn btn-primary" href="{{ url_for('library') }}">Zurück zur Bibliothek</a>
+</div>
+{% endblock %}

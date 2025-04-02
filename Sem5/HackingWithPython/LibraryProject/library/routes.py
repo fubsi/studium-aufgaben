@@ -5,17 +5,18 @@ from sqlalchemy import text
 @app.route('/')
 def home():
     benutzername = get_benutzername(request)
+    print(f"Recieved request for home page with benutzername {benutzername}")
     return render_template('home.html', benutzername=benutzername)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        benutzername = request.form['benutzername']
+        benutzername = request.form['username']
         password = request.form['password']
         # Here you would typically check the benutzername and password against a database
         print(f"Recieved login request for {benutzername} with password {password}")
 
-        query = f"SELECT * FROM benutzer WHERE benutzername='{benutzername}' AND password='{password}'"
+        query = f"SELECT * FROM benutzer WHERE benutzername='{benutzername}' AND passwort='{password}'"
         result = db.session.execute(text(query)).fetchall()
         if len(result) > 0:
             # Assuming the user is authenticated successfully
@@ -32,7 +33,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        benutzername = request.form['benutzername']
+        benutzername = request.form['username']
         password = request.form['password']
         # Here you would typically save the new user to a database
         print(f"Recieved registration request for {benutzername} with password {password}")
@@ -62,7 +63,7 @@ def logout():
 def library():
     benutzername = get_benutzername(request)
     
-    query = f"SELECT * FROM Buch WHERE benutzerid = (SELECT id FROM benutzer WHERE benutzername = {benutzername})"
+    query = f"SELECT * FROM buch WHERE benutzerid = '(SELECT benutzerid FROM benutzer WHERE benutzername = {benutzername})'"
     result = db.session.execute(text(query)).fetchall()
 
     if len(result) == 0:
@@ -71,6 +72,21 @@ def library():
     
     print(f"Recieved request for library page with benutzername {benutzername} and books {result}")
     return render_template('library.html', benutzername=benutzername, books=result)
+
+@app.route('/more_info')
+def more_info():
+    benutzername = get_benutzername(request)
+    buchid = request.args.get('buchid')
+    
+    query = f"SELECT * FROM buch WHERE buchid = {buchid}"
+    result = db.session.execute(text(query)).fetchall()
+
+    if len(result) == 0:
+        print(f"No book found with id {buchid}")
+        return render_template('more_info.html', benutzername=benutzername, book=None)
+    
+    print(f"Recieved request for more info page with benutzername {benutzername} and book {result[0]}")
+    return render_template('more_info.html', benutzername=benutzername, book=result[0])
 
 def get_benutzername(request):
     benutzername = request.cookies.get('benutzername')

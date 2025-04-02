@@ -5,9 +5,9 @@ Home - Library (EA)
 
 {% block content %}
 <div class="container">
-    <h1>Willkommen in deiner Bibliothek, {{ username }}!</h1>
+    <h1>Willkommen in deiner Bibliothek, {{ benutzername }}!</h1>
     <p>Das hier ist ein ganz simples Managementsystem für deine ganz persönliche Bibliothek!</p>
-    {% if username == "Guest" %}
+    {% if benutzername == "Guest" %}
         <p>Bitte logge dich ein, um deine Bücher zu sehen.</p>
     {% else %}
         <p>Nutze den Menüpunkt "Bibliothek", um eine Auflistung deiner Einträge zu erhalten</p>
