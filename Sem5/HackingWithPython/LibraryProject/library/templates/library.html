@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}
+Overview - Library (EA)
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Bibliothek</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Titel</th>
+                <th scope="col">Autor</th>
+                <th scope="col">Genre</th>
+                <th scope="col">Jahr</th>
+                <th scope="col">Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.id }}</td>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.genre }}</td>
+                <td>{{ book.year }}</td>
+                <td><button class="btn btn-info">Mehr Info</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+        Buch hinzufügen
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
