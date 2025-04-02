@@ -12,7 +12,7 @@ These are my Tickets
           <tr>
             <th scope="col">#</th>
             <th scope="col">Prio</th>
-            <th scope="col">Username</th>
+            <th scope="col">BenutzerId</th>
             <th scope="col">Title</th>
             <th scope="col"></th>
           </tr>
@@ -20,10 +20,10 @@ These are my Tickets
         <tbody>
             {% for ticket in items %}
                 <tr>
-                  <th scope="row">{{ ticket.id }}</th>
-                  <td>{{ ticket.priority }}</td>
-                  <td>{{ ticket.username }}</td>
-                  <td>{{ ticket.title }}</td>
+                  <th scope="row">{{ ticket[0] }}</th>
+                  <td>{{ ticket[1] }}</td>
+                  <td>{{ ticket[2] }}</td>
+                  <td>{{ ticket[3] }}</td>
                   <td><button type="button" class="btn btn-info">More Info</button></td>
                 </tr>
             {% endfor %}
