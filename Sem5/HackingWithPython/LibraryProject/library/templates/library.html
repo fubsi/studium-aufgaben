@@ -4,7 +4,7 @@ Overview - Library (EA)
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container bg-dark rounded text-white my-5 p-5">
     <h1>Bibliothek</h1>
     <table class="table">
         <thead>
@@ -25,7 +25,10 @@ Overview - Library (EA)
                 <td>{{ book[2] }}</td>
                 <td>{{ book[3] }}</td>
                 <td>{{ book[4] }}</td>
-                <td><a class="btn btn-info" href="{{ url_for('more_info', bookId=book[0]) }}">Mehr Info</a></td>
+                <td>
+                    <a class="btn btn-info" href="{{ url_for('more_info', bookId=book[0]) }}">Mehr Info</a>
+                    <a class="btn btn-danger" href="{{ url_for('delete_book', bookId=book[0]) }}">L&ouml;schen</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -38,13 +41,13 @@ Overview - Library (EA)
 
     <!-- Modal -->
     <div class="modal fade" id="addBookModal" tabindex="1" aria-labelledby="addBookModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
+        <div class="modal-dialog bg-dark">
+            <div class="modal-content bg-dark">
+                <div class="modal-header bg-dark">
                     <h2>Neues Buch hinzufügen:</h2>
                 </div>
-                <div class="modal-content p-3">
-                    <form action="{{ url_for(add_book) }}">
+                <div class="modal-content bg-dark p-3">
+                    <form action="{{ url_for('add_book') }}" method="post">
                         <div class="mb-3">
                             <label for="title" class="form-label">Titel</label>
                             <input type="text" class="form-control" id="title" name="title">
@@ -59,7 +62,11 @@ Overview - Library (EA)
                         </div>
                         <div class="mb-3">
                             <label for="year" class="form-label">Jahr</label>
-                            <input type="text" class="form-control" id="year" name="year">
+                            <input type="date" class="form-control" id="year" name="year">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Beschreibung</label>
+                            <textarea class="form-control" id="description" name="description"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Hinzufügen</button>
                     </form>

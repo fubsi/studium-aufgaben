@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}
-Login - Library (EA)
+Registrieren - Library (EA)
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Login</h1>
+<div class="container bg-dark text-white my-5 p-5 rounded">
+    <h1>Registrierung</h1>
     <form method="POST" action="{{ url_for('register') }}">
         <div class="mb-3">
             <label for="username" class="form-label">Username</label>

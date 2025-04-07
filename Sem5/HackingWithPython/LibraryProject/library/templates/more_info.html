@@ -5,13 +5,13 @@ More Info - Library (EA)
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container bg-dark rounded text-white my-5 p-3">
     <h1>Mehr Informationen</h1>
     <p>Titel: {{ book[1] }}</p>
     <p>Autor: {{ book[2] }}</p>
     <p>Genre: {{ book[3] }}</p>
     <p>Jahr: {{ book[4] }}</p>
-    <p>Beschreibung: {{ book[5] }}</p>
+    <p>Beschreibung: {{ book[6] }}</p>
     <a class="btn btn-primary" href="{{ url_for('library') }}">Zurück zur Bibliothek</a>
 </div>
 {% endblock %}

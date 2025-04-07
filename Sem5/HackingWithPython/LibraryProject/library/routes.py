@@ -22,6 +22,7 @@ def login():
             # Assuming the user is authenticated successfully
             resp = redirect(url_for('home'))
             resp.set_cookie('benutzername', result[0][1])  # Set a cookie with the benutzername
+            resp.set_cookie('benutzerId', str(result[0][0]))  # Set a cookie with the benutzerId
             return resp
 
         
@@ -56,6 +57,7 @@ def register():
 @app.route('/logout')
 def logout():
     resp = redirect(url_for('home'))
+    resp.set_cookie('benutzerId', '', expires=0)  # Clear the cookie
     resp.set_cookie('benutzername', '', expires=0)  # Clear the cookie
     return resp
 
@@ -63,7 +65,7 @@ def logout():
 def library():
     benutzername = get_benutzername(request)
     
-    query = f"SELECT * FROM buch WHERE benutzerid = '(SELECT benutzerid FROM benutzer WHERE benutzername = {benutzername})'"
+    query = f"SELECT * FROM buch WHERE benutzerid = {request.cookies.get('benutzerId')}"
     result = db.session.execute(text(query)).fetchall()
 
     if len(result) == 0:
@@ -76,7 +78,7 @@ def library():
 @app.route('/more_info')
 def more_info():
     benutzername = get_benutzername(request)
-    buchid = request.args.get('buchid')
+    buchid = request.args.get('bookId')
     
     query = f"SELECT * FROM buch WHERE buchid = {buchid}"
     result = db.session.execute(text(query)).fetchall()
@@ -87,6 +89,23 @@ def more_info():
     
     print(f"Recieved request for more info page with benutzername {benutzername} and book {result[0]}")
     return render_template('more_info.html', benutzername=benutzername, book=result[0])
+
+@app.route('/addBook', methods=['POST'])
+def add_book():
+    query = f"INSERT INTO buch (titel, author, jahr, beschreibung, genre, benutzerId) VALUES ('{request.form['title']}', '{request.form['author']}', '{request.form['year']}', '{request.form['description']}', '{request.form['genre']}', '{request.cookies.get('benutzerId')}')"
+    result = db.session.execute(text(query))
+    db.session.commit()
+    print(f"Recieved request to add book with title {request.form['title']} and author {request.form['author']}")
+    print(f"Book added successfully with id {result.lastrowid}")
+    return redirect(url_for('library'))
+
+@app.route('/deleteBook', methods=['GET'])
+def delete_book():
+    query = f"DELETE FROM buch WHERE buchid = {request.args.get('bookId')}"
+    db.session.execute(text(query))
+    db.session.commit()
+    print(f"Recieved request to delete book with id {request.args}")
+    return redirect(url_for('library'))
 
 def get_benutzername(request):
     benutzername = request.cookies.get('benutzername')
