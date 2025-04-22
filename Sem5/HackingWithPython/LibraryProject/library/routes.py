@@ -32,7 +32,7 @@ def login():
             return resp
 
         
-        return redirect(url_for('home'))
+        return redirect(url_for('login'))
     
     # If the request method is GET, just render the login page
     return render_template('login.html')
