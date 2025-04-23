@@ -17,9 +17,9 @@ def getGaussData2D(N,mu1,mu2,Sig11,Sig22,Sig12,t=0,C=2,flagOneHot=0):
     """
     mu=np.array([mu1,mu2])                            # define expectation vector of Gaussian
     Sig=np.array([[Sig11,Sig12],[Sig12,Sig22]])       # define covariance matrix of Gaussian
-    X  =np.zeros((N,2))                               # get data matrix        !!! REPLACE THIS !!!  
+    X  =np.random.multivariate_normal(mu, Sig, N);    # get data matrix        !!! REPLACE THIS !!!  
     if flagOneHot:
-        T=np.zeros((N,nClasses),'int')                # allocate target matrix
+        T=np.zeros((N,C),'int')                # allocate target matrix
         T[:,t]=1;                                     # set one-hot-entry of current class to 1
     else:
         T=np.zeros(N,'int')                           # allocate target vector
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # (ii) generate data
     np.random.seed(0)              # set seed of random number generator             !!! REPLACE THIS !!!
     X1,T1 = getGaussData2D(N1,mu1[0],mu1[1],Sigma1[0,0],Sigma1[1,1],Sigma1[0,1],1)   # generate data for class 1
-    X2,T2 = X1,T1                                                                    # generate data for class 2   !!! REPLACE THIS !!!
+    X2,T2 = getGaussData2D(N2,mu2[0],mu2[1],Sigma2[0,0],Sigma2[1,1],Sigma2[0,1],1)   # generate data for class 2   !!! REPLACE THIS !!!
     print("X1=",X1)
     print("T1=",T1)
     print("X2=",X2)
