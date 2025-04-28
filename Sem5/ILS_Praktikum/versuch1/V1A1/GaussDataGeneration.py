@@ -59,11 +59,12 @@ if __name__ == '__main__':
 
     # (iv) estimate expectation and covariances of concatenated data
     N,D = X.shape[0],X.shape[1]    # total data number and dimensionality
-    mu = [0,0]                     # estimate of mean vector                                  !!! REPLACE THIS !!! 
+    mu = np.mean(X,0)                     # estimate of mean vector                                  !!! REPLACE THIS !!! 
     Sigma = np.zeros((D,D))        # estimate covariance matrix: initialize with zeros
     for n in range(N):
-        Sigma += np.zeros((D,D))   # add up terms for covariance estimation  using np.outer   !!! REPLACE THIS !!!   
-    
+        Sigma += np.outer(X[n] - mu,X[n] - mu)   # add up terms for covariance estimation  using np.outer   !!! REPLACE THIS !!!  
+    Sigma /= N-1 
+
     print("N=",N,"D=",D)    # data size
     print("mu=",mu)         # estimate of total mean
     print("Sigma=",Sigma)   # estimate of total covariance matrix
