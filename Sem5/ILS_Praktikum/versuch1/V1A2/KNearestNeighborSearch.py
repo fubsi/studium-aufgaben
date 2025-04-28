@@ -8,8 +8,8 @@ def getKNearestNeighbors(x,X,K=1):
     :param K: number of nearest-neighbors to be returned
     :return: return list of K row indexes referring to the K nearest neighbors of x in X
     """
-    d=[]                          # !!REPLACE!! compute list of Euklidean distances between x and X[i]
-    return np.array(K*[0],'int')  # !!REPLACE!! return indexes of k smallest distances     
+    d = sorted([(np.linalg.norm(x - X[i]),i) for i in range(X.shape[0])])                          # !!REPLACE!! compute list of Euklidean distances between x and X[i]
+    return np.array([x[1] for x in d][:K],'int')  # !!REPLACE!! return indexes of k smallest distances     
 
 def getClassProbabilities(t,C):     
     """
