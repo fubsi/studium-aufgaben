@@ -119,9 +119,9 @@ class KNNClassifier(Classifier):
         :returns idxKNN: indexes of the K nearest neighbors (ordered w.r.t. ascending distance) 
         """
         if K      is None: K      = self.K                                   # use default parameter K?
-        if idxKNN is None: idxKNN = None                                     # !!REPLACE!! get indexes of k nearest neighbors of x (in case idxKNN is not already defined)
-        pc     = np.ones(self.C)/self.C                                      # !!REPLACE!! get a-posteriori class probabilities
-        y_hat  = 0                                                           # !!REPLACE!! make class decision
+        if idxKNN is None: idxKNN = KNNS.getKNearestNeighbors(x,self.X,K)                                     # !!REPLACE!! get indexes of k nearest neighbors of x (in case idxKNN is not already defined)
+        pc     = KNNS.getClassProbabilities(self.T[idxKNN], self.C)                                      # !!REPLACE!! get a-posteriori class probabilities
+        y_hat  = KNNS.classify(pc)                                                           # !!REPLACE!! make class decision
         return y_hat, pc, idxKNN  # return predicted class, a-posteriori-distribution, and indexes of nearest neighbors
 
 
@@ -152,7 +152,7 @@ class FastKNNClassifier(Classifier):
         :returns: - 
         """
         KNNClassifier.fit(self,X,T)                # call to parent class method (just store X and T)
-        self.kdtree = None                         # !!REPLACE!! do an indexing of the feature vectors by constructing a kd-tree
+        self.kdtree = scipy.spatial.KDTree(X)                         # !!REPLACE!! do an indexing of the feature vectors by constructing a kd-tree
         
     def predict(self,x,K=None):
         """ 
@@ -164,8 +164,8 @@ class FastKNNClassifier(Classifier):
         :returns idxKNN: indexes of the K nearest neighbors (ordered w.r.t. ascending distance) 
         """
         if K==None: K=self.K                          # use default parameter K?
-        idxKNN = range(K)                             # !!REPLACE!! get indexes of K nearest neighbors of x from kd-tree
-        if K==1: idxKNN = [idxKNN[0]]                 # !!REPLACE!! in case K=1 cast (single) nearest neighbor index nn as a list idxNN
+        idxKNN = self.kdtree.query(x,K)[1]                             # !!REPLACE!! get indexes of K nearest neighbors of x from kd-tree
+        if K==1: idxKNN = [idxKNN]                 # !!REPLACE!! in case K=1 cast (single) nearest neighbor index nn as a list idxNN
         return KNNClassifier.predict(self,x,K,idxKNN) # return predicted class, a-posteriori-distribution, and indexes of nearest neighbors (as in naive KNN)
 
 # ----------------------------------------------------------------------------------------- 
@@ -199,11 +199,11 @@ class KernelMLPClassifier(Classifier):
             T_onehot=np.zeros((len(X),self.C),'int')   # allocate space for one-hot-vectors
             for n in range(len(X)): T_onehot[n,T[n]]=1 # set one hot components
             T=T_onehot                                 # replace T by one-hot label matrix
-        self.Wz=None      # !!REPLACE!! weight matrix from input to hidden layer corresponds to input data matrix
-        self.K=None       # !!REPLACE!! Gram matrix
-        self.Wy=None      # !!REPLACE!! weight matrix from hidden to output layer 
+        self.Wz=X      # !!REPLACE!! weight matrix from input to hidden layer corresponds to input data matrix
+        self.K=np.dot(X,np.transpose(X))      # !!REPLACE!! Gram matrix
+        self.Wy=np.dot(np.transpose(T), np.linalg.inv(np.dot(self.hz(self.K) + 0, np.identity(T.shape[0]))))      # !!REPLACE!! weight matrix from hidden to output layer 
         
-    def predict(self,x):
+    def predict(self,x,K=None):
         """ 
         Implementation of KD-Tree based KNN classification algorithm
         :param x: input data vector
@@ -212,8 +212,9 @@ class KernelMLPClassifier(Classifier):
         :returns y: Dendritic potential (=firing rates) of linear output layer
         :returns None: dummy 
         """
-        z=None                        # !!REPLACE!! firing rates of hidden layer z
-        y=None                        # !!REPLACE!! dendritic potentials = firing rates in output layer y
+        if K==None: K=self.K                          # use default parameter K?
+        z= self.hz(np.dot(self.Wz, x))                        # !!REPLACE!! firing rates of hidden layer z
+        y= np.dot(self.Wy, z)                       # !!REPLACE!! dendritic potentials = firing rates in output layer y
         y_hat=np.argmax(y)            # select class with maximum potential as winner class
         return y_hat,y,None 
 

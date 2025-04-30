@@ -119,13 +119,13 @@ class Sim(iv.IVisit_Simulation):
         T = np.concatenate((T1,T2))
 
         # (ii) find nearest neighbor for input x
-        idx_KNN = [0]                                        # !!REPLACE!! get indexes of K nearest neighbors
+        idx_KNN = getKNearestNeighbors(self.x, X, p.K)                                        # !!REPLACE!! get indexes of K nearest neighbors
         X_KNN = X[idx_KNN]                                   # nearest neighbor vectors
         T_KNN = T[idx_KNN]                                   # nearest neighbor class labels
         r_KNN = np.linalg.norm(X_KNN[-1]-self.x)             # largest Euklidean distance defines radius of sphere containing all K nearest neighbors
 
         # (iii) do classification
-        P=[0.5, 0.5]                                         # !!REPLACE!! get class probabilities; subtract 1 from T_KNN to get class labels 0,1 (instead of 1,2) as required
+        P= getClassProbabilities(T_KNN-1  , 2)                                         # !!REPLACE!! get class probabilities; subtract 1 from T_KNN to get class labels 0,1 (instead of 1,2) as required
         c=classify(P)+1                                      # select class decision (add 1 to have again class labels 1,2 instead of 0,1)
 
         # (iv) write results
