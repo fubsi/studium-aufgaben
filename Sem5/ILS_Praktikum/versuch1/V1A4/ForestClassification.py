@@ -4,19 +4,19 @@ from time import perf_counter
 from Classifier import *
 
 def hz_sgn_sqrt(x):
-    return x                         # !!REPLACE!! 
+    return np.multiply(np.sign(x), np.sqrt(np.absolute(x)))                       # !!REPLACE!! 
 
 def hz_sgn_log(x):
-    return x                         # !!REPLACE!! 
+    return np.multiply(np.sign(x), np.log(1 + np.absolute(x)))                         # !!REPLACE!! 
 
 def hz_sgn_square(x):
-    return x                         # !!REPLACE!!
+    return np.multiply(np.sign(x), np.power(x,2))                         # !!REPLACE!!
 
 def hz_cubic(x):
-    return x                         # !!REPLACE!! 
+    return np.power(x,3)                         # !!REPLACE!! 
 
 # (I) Load data 
-forestdata  = pd.read_csv('../../DATA/ForestTypes/ForestTypesData.csv'); # load data as pandas data frame 
+forestdata  = pd.read_csv('./training.csv'); # load data as pandas data frame 
 classlabels = ['s','h','d','o'];                                      # possible class labels (C=4) 
 classidx    = {classlabels[i]:i for i in range(len(classlabels))}     # dict for mapping classlabel to index 
 C           = len(classlabels)        # number of classes (Note: K is now the number of nearest-neighbors!!!!!!)
@@ -32,8 +32,8 @@ print("T[0..9]=\n",T[0:10])
 
 # (II) Test KNN-classifier with grid search on S-fold cross validation and K
 if 1:
-    S_list=[3]                            # parameter S for cross validation
-    K_list=[1]                            # number K of nearest neighbors 
+    S_list=[2, 3, 5, 10]                            # parameter S for cross validation
+    K_list=[1, 3, 5, 7, 9, 11]                            # number K of nearest neighbors 
     accuracy = np.zeros((len(S_list),len(K_list)));   # array to save accuracy of classifier for each value of S and K
     minerr,bestS,bestK=1.0,-1,-1
     for i in range(len(S_list)):
@@ -41,8 +41,8 @@ if 1:
         for j in range(len(K_list)):
             K=K_list[j]
             t1=perf_counter()              # start time
-            knnc = 0                       # !!REPLACE!! create KNN classifier with kd-trees 
-            err,Cp = 1.0,0                 # !!REPLACE!! do S-fold cross validation for data X,T
+            knnc = FastKNNClassifier(C, 3)                       # !!REPLACE!! create KNN classifier with kd-trees 
+            err,Cp = knnc.crossvalidate(5,X,T)                 # !!REPLACE!! do S-fold cross validation for data X,T
             t2=perf_counter()              # end time
             time_comp=t2-t1                # computing time in seconds
             print("\nS=",S," fold cross validation using the",K,"-NNClassifier with KD-Trees yields the following results:")
@@ -61,9 +61,9 @@ if 1:
 #exit(0)
 
 # (III) Test KernelMLP classifier with grid search on S-fold cross validation and K
-if 0:
-    S_list=[3]                         # parameter S for cross validation
-    hz_list=[hz_sgn_sqrt]              # activation functions in hidden layer  
+if 1:
+    S_list=[2, 3, 5, 10]                         # parameter S for cross validation
+    hz_list=[hz_sgn_sqrt, hz_sgn_log, hz_sgn_square, hz_cubic]              # activation functions in hidden layer  
     accuracy = np.zeros((len(S_list),len(hz_list)));   # array to save accuracy of classifier for each value of S and K
     minerr,bestS,best_hz=1.0,None,None
     for i in range(len(S_list)):
@@ -71,8 +71,20 @@ if 0:
         for j in range(len(hz_list)):
             hz=hz_list[j]
             print("S=",S,"hz=",hz)
-            #!!REPLACE/INSERT YOUR CODE!!
+            t1=perf_counter()              # start time
+            kmlp = KernelMLPClassifier(C, hz)                       # !!REPLACE!! create KNN classifier with kd-trees 
+            err,Cp = kmlp.crossvalidate(5,X,T)                 # !!REPLACE!! do S-fold cross validation for data X,T
+            t2=perf_counter()              # end time
+            time_comp=t2-t1                # computing time in seconds
+            print("Classification error probability err = ", err)
+            print("Accuracy = ", 1.0-err)
+            print("Confusion Probabilities matrix Cp[i,j]=p(true class i,predicted class j) = \n", Cp)
+            print("Computing time = ", time_comp, " sec")
+            accuracy[i,j]=1.0-err
+            if err<minerr:
+                minerr=err
+                bestS,best_hz=S,hz
     print("\naccuracy=\n",accuracy)
     print("\np_classerror=\n",1.0-accuracy)
-    print("\nmininmal err=",minerr," for S=",bestS,"hz=",best_hz)
+    print("\nmininmal err=",minerr," for S=",bestS,"hz=",best_hz.__name__)
 
