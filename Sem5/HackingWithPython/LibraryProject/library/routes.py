@@ -32,10 +32,10 @@ def login():
             return resp
 
         
-        return redirect(url_for('login'))
+        return render_template('login.html'), 400
     
     # If the request method is GET, just render the login page
-    return render_template('login.html')
+    return render_template('login.html'), 200
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
