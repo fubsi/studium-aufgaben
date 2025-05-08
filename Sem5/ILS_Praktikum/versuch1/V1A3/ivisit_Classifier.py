@@ -166,6 +166,12 @@ class Sim(iv.IVisit_Simulation):
         d.str_results+="t_train   ="+str(np.mean(self.list_t_train   [0:p.t_avg]))+"\n"
         d.str_results+="t_classify="+str(np.mean(self.list_t_classify[0:p.t_avg]))+"\n"
         d.str_results+="t_crossval="+str(np.mean(self.list_t_crossval[0:p.t_avg]))+"\n"
+        d.str_results+="-------------------------------------\n"
+        d.str_results+="t_gesamt ="+str(np.mean(self.list_t_datagen [0:p.t_avg])+\
+                        np.mean(self.list_t_train   [0:p.t_avg])+\
+                        np.mean(self.list_t_classify[0:p.t_avg])+\
+                        np.mean(self.list_t_crossval[0:p.t_avg]))+"\n"
+        
         d.str_results+="(averaged over "+str(p.t_avg)+" steps)\n"
         
         # (v) plot data
