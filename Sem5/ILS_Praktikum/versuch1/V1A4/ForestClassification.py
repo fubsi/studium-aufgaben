@@ -16,6 +16,7 @@ def hz_cubic(x):
     return np.power(x,3)                         # !!REPLACE!! 
 
 # (I) Load data 
+np.random.seed(26)                  # set random seed for reproducibility
 forestdata  = pd.read_csv('./training.csv'); # load data as pandas data frame 
 classlabels = ['s','h','d','o'];                                      # possible class labels (C=4) 
 classidx    = {classlabels[i]:i for i in range(len(classlabels))}     # dict for mapping classlabel to index 
