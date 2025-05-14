@@ -25,19 +25,22 @@ def get_phi_polyD3(m):   # return list of 3D polynomial basis functions phi_j(x0
 
 def get_phi_poly(d,m):   # return list of all polynomial basis functions for input dimensionality d and polynomial degree m
     phi = []                                                     # init list of basis functions
-    list_ni=[]                                                   # !!! REPLACE THIS !!!  --> generate all tuples (n1,...,nd) with n1+...+nd<=m using Cartesian product
+    list_ni=[tup for tup in itertools.product(range(m+1), repeat=d) if sum(tup) <=m]                                                   # !!! REPLACE THIS !!!  --> generate all tuples (n1,...,nd) with n1+...+nd<=m using Cartesian product
     list_ni_sum=np.array([np.sum(ni) for ni in list_ni],'int')   # list of sums of the tuples (n1,...,nd); just to produce correct order
     idx_list=np.array(range(len(list_ni_sum)))                   # just a list [0,1,2,...,len(list_ni_sum)-1] for later selection of subsets
     for n in range(m+1):                      # loop over total degree n=0,1,2,...,m
         idx_list_n=idx_list[list_ni_sum==n]   # get indexes for all tuples (n1,...,nd) with sum = n
         for i in idx_list_n:
             ni=list_ni[i]                     # one tuple (n1,...,nd) of the Cartesian product with sum=n
-            phi += [lambda x: x[0]]           # !!! REPLACE THIS !!!  --> add basis function x1^n1*n2^n2*...*xd^nd corresponding to tuple ni=(n1,...,nd) to list
+            phi += [lambda x,ni=ni: np.prod([x[i]**ni[i] for i,_ in enumerate(x)])]           # !!! REPLACE THIS !!!  --> add basis function x1^n1*n2^n2*...*xd^nd corresponding to tuple ni=(n1,...,nd) to list
     return lambda x: np.array([phi_j(x) for phi_j in phi])   # return function generating feature vector phi(x) for input x 
 
 
 def evaluate_linear_model(W,phi,x):  # return linear model function y=w.T*phi(x) or y=W*phi(x); works for both cases
-    y=0                              # !!! REPLACE THIS !!!
+    if len(W.shape)==1:   # 1D case
+        y = sum(W*phi(x))
+    else:                 # ND case 
+        y = [sum(row*phi(x)).item() for row in W]                              # !!! REPLACE THIS !!!
     return y
 
 
