@@ -15,7 +15,12 @@ def get_phi_polyD2(m):   # return list of 2D polynomial basis functions phi_j(x0
     return lambda x: np.array([phi_j(x) for phi_j in phi])   # return function generating feature vector phi(x) for input x 
 
 def get_phi_polyD3(m):   # return list of 3D polynomial basis functions phi_j(x0,x1,x2) of degree m
-    phi = [lambda x: x[0]+x[1]+x[2]]   # !!! REPLACE THIS !!!  --> use similar code as in get_phi_polyD2(m), but for 3D inputs!!
+    phi = []   # !!! REPLACE THIS !!!  --> use similar code as in get_phi_polyD2(m), but for 3D inputs!!
+    for n in range(m+1):            # loop over total degree n=0,1,2,...,m
+        for n0 in range(n+1):       # loop over all n0 (and n1,n2:=n-n0) with n0+n1+n2=n
+            for n1 in range(n-n0+1):   # loop over all n1 (and n2:=n-n0-n1) with n0+n1+n2=n
+                n2=n-n0-n1
+                phi+=[lambda x,n0=n0,n1=n1,n2=n2: x[0]**n0 * x[1]**n1 * x[2]**n2]
     return lambda x: np.array([phi_j(x) for phi_j in phi])   # return function generating feature vector phi(x) for input x 
 
 def get_phi_poly(d,m):   # return list of all polynomial basis functions for input dimensionality d and polynomial degree m
