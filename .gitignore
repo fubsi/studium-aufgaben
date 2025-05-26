@@ -175,3 +175,6 @@ cython_debug/
 
 # Database files
 *.db
+
+# Hack-PY Andere Projekte
+Andere_Projekte/
