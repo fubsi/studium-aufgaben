@@ -143,17 +143,17 @@ class LSRRegressifier(Regressifier):
         else: self.K=T.shape[1]
         try:
             # (ii.a) compute optimal least squares weights
-            PHI = np.array([phi(X.tolist()[i]) for i in range(self.N)])                                                    # !!! REPLACE THIS !!!  --> compute design matrix
-            PHIT_PHI_lmbdaI = np.dot(PHI,np.transpose(PHI))+lmbda*np.identity(self.N)                                    # !!! REPLACE THIS !!!  --> compute PHI_T*PHI+lambda*I
+            PHI = np.array([phi(x) for x in X])                                                   # !!! REPLACE THIS !!!  --> compute design matrix
+            PHIT_PHI_lmbdaI = np.dot(np.transpose(PHI),PHI)+lmbda * np.identity(self.M)                                    # !!! REPLACE THIS !!!  --> compute PHI_T*PHI+lambda*I
             PHIT_PHI_lmbdaI_inv = np.linalg.inv(PHIT_PHI_lmbdaI)                                   # !!! REPLACE THIS !!!  --> compute inverse matrix (may be bad conditioned and fail) 
-            self.W_LSR = np.dot(PHIT_PHI_lmbdaI_inv,np.dot(PHI,T[0]))                                            # !!! REPLACE THIS !!!  --> regularized least squares weights
+            self.W_LSR = np.dot(PHIT_PHI_lmbdaI_inv,np.dot(np.transpose(PHI),T))                                         # !!! REPLACE THIS !!!  --> regularized least squares weights
             # (ii.b) check numerical condition
-            Z=PHIT_PHI_lmbdaI*PHIT_PHI_lmbdaI_inv                                                        # !!! REPLACE THIS !!! --> compute PHIT_PHI_lmbdaI*PHIT_PHI_lmbdaI_inv-I --> should become the zero matrix if good conditioned!
-            maxZ = 0                                                   # !!! REPLACE THIS !!! --> compute maximum component of Z (<eps for good conditioned problem)
+            Z=np.dot(PHIT_PHI_lmbdaI,PHIT_PHI_lmbdaI_inv) - np.identity(self.M)                                                        # !!! REPLACE THIS !!! --> compute PHIT_PHI_lmbdaI*PHIT_PHI_lmbdaI_inv-I --> should become the zero matrix if good conditioned!
+            maxZ = np.max(Z)                                                   # !!! REPLACE THIS !!! --> compute maximum component of Z (<eps for good conditioned problem)
             assert maxZ<=self.eps,"MATRIX INVERSION IS BAD CONDITIONED!"  # check if matrix inversion has good condition
         except Exception as e:
             # (ii.c) if exception occurs then set weights to defaults (zeros) and print warning message
-            print(e)
+            #print(e)
             flagOK=0;
             print("EXCEPTION DUE TO BAD CONDITION:flagOK=", flagOK, "maxZ=",maxZ,"N=",self.N,"D=",self.D,"M=",self.M,"K=",self.K)
             self.W_LSR=np.zeros((self.K,self.M))
