@@ -143,16 +143,18 @@ class LSRRegressifier(Regressifier):
         else: self.K=T.shape[1]
         try:
             # (ii.a) compute optimal least squares weights
-            PHI = None                                                    # !!! REPLACE THIS !!!  --> compute design matrix
-            PHIT_PHI_lmbdaI = None                                        # !!! REPLACE THIS !!!  --> compute PHI_T*PHI+lambda*I
-            PHIT_PHI_lmbdaI_inv = None                                    # !!! REPLACE THIS !!!  --> compute inverse matrix (may be bad conditioned and fail) 
-            self.W_LSR = None                                             # !!! REPLACE THIS !!!  --> regularized least squares weights
+            PHI = np.array([self.phi(x) for x in X])                                                   # !!! REPLACE THIS !!!  --> compute design matrix
+            PHIT_PHI_lmbdaI = np.dot(np.transpose(PHI),PHI)+self.lmbda * np.identity(self.M)                                    # !!! REPLACE THIS !!!  --> compute PHI_T*PHI+lambda*I
+            PHIT_PHI_lmbdaI_inv = np.linalg.inv(PHIT_PHI_lmbdaI)                                   # !!! REPLACE THIS !!!  --> compute inverse matrix (may be bad conditioned and fail) 
+            self.W_LSR = np.dot(PHIT_PHI_lmbdaI_inv,np.dot(np.transpose(PHI),T))                                         # !!! REPLACE THIS !!!  --> regularized least squares weights
             # (ii.b) check numerical condition
-            Z=None                                                        # !!! REPLACE THIS !!! --> compute PHIT_PHI_lmbdaI*PHIT_PHI_lmbdaI_inv-I --> should become the zero matrix if good conditioned!
-            maxZ = 1000                                                   # !!! REPLACE THIS !!! --> compute maximum component of Z (<eps for good conditioned problem)
+            Z=np.dot(PHIT_PHI_lmbdaI,PHIT_PHI_lmbdaI_inv) - np.identity(self.M)                                                        # !!! REPLACE THIS !!! --> compute PHIT_PHI_lmbdaI*PHIT_PHI_lmbdaI_inv-I --> should become the zero matrix if good conditioned!
+            maxZ = np.max(Z)                                                   # !!! REPLACE THIS !!! --> compute maximum component of Z (<eps for good conditioned problem)
+            print(maxZ)
             assert maxZ<=self.eps,"MATRIX INVERSION IS BAD CONDITIONED!"  # check if matrix inversion has good condition
-        except:
+        except Exception as e:
             # (ii.c) if exception occurs then set weights to defaults (zeros) and print warning message
+            #print(e)
             flagOK=0;
             print("EXCEPTION DUE TO BAD CONDITION:flagOK=", flagOK, "maxZ=",maxZ,"N=",self.N,"D=",self.D,"M=",self.M,"K=",self.K)
             self.W_LSR=np.zeros((self.K,self.M))
@@ -168,7 +170,7 @@ class LSRRegressifier(Regressifier):
         :returns: predicted target vector y of size K
         """
         if self.flagSTD>0: x=self.datascalerX.scale(x)    # scale x before computing the prediction?
-        y=0                                               # !!! REPLACE THIS !!! --> compute model prediction; you can use evaluate_linear_model(.) from module polynomial_basis_functions
+        y=evaluate_linear_model(self.W_LSR, self.phi, x)                                               # !!! REPLACE THIS !!! --> compute model prediction; you can use evaluate_linear_model(.) from module polynomial_basis_functions
         if self.flagSTD>0: y=self.datascalerT.unscale(y)  # unscale prediction?
         return y                                          # return prediction y for data vector x
 
@@ -258,7 +260,7 @@ if __name__ == '__main__':
     print("\n-----------------------------------------")
     print("Do a Least-Squares-Regression")
     print("-----------------------------------------")
-    lmbda=0;
+    lmbda=0  # regularization parameter;
     lsr = LSRRegressifier(lmbda,phi)
     lsr.fit(X,T)
     print("lsr.W_LSR=",lsr.W_LSR)        # weight vector (should be approximately [w0,w1]=[4,2])
@@ -274,7 +276,7 @@ if __name__ == '__main__':
     print("\n-----------------------------------------")
     print("Do a KNN-Regression")
     print("-----------------------------------------")
-    K=5;
+    K=1;
     knnr = KNNRegressifier(K)
     knnr.fit(X,T)
     print("prediction of x=",x,"is y=",knnr.predict(x))

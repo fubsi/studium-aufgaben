@@ -169,7 +169,7 @@ class LSRRegressifier(Regressifier):
         :returns: predicted target vector y of size K
         """
         if self.flagSTD>0: x=self.datascalerX.scale(x)    # scale x before computing the prediction?
-        y=0                                               # !!! REPLACE THIS !!! --> compute model prediction; you can use evaluate_linear_model(.) from module polynomial_basis_functions
+        y=evaluate_linear_model(self.W_LSR, self.phi, x)                                               # !!! REPLACE THIS !!! --> compute model prediction; you can use evaluate_linear_model(.) from module polynomial_basis_functions
         if self.flagSTD>0: y=self.datascalerT.unscale(y)  # unscale prediction?
         return y                                          # return prediction y for data vector x
 
@@ -259,7 +259,7 @@ if __name__ == '__main__':
     print("\n-----------------------------------------")
     print("Do a Least-Squares-Regression")
     print("-----------------------------------------")
-    lmbda=0;
+    lmbda=0  # regularization parameter;
     lsr = LSRRegressifier(lmbda,phi)
     lsr.fit(X,T)
     print("lsr.W_LSR=",lsr.W_LSR)        # weight vector (should be approximately [w0,w1]=[4,2])
@@ -275,7 +275,7 @@ if __name__ == '__main__':
     print("\n-----------------------------------------")
     print("Do a KNN-Regression")
     print("-----------------------------------------")
-    K=5;
+    K=1;
     knnr = KNNRegressifier(K)
     knnr.fit(X,T)
     print("prediction of x=",x,"is y=",knnr.predict(x))
