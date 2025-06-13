@@ -70,8 +70,8 @@ def doLearningStep(W1,W2,xn,tn,eta,lmbda_by_N=0,flagBiasUnit=1): # do one backpr
     delta_1,delta_2=backPropagateErrors(z_1,z_2,tn,W1,W2,flagBiasUnit); # get error signals by backpropagation
     nablaED_1 = np.outer(delta_1,xn)                            # REPLACE DUMMY CODE: gradient of data error function for first layer
     nablaED_2 = np.outer(delta_2,z_1)                             # REPLACE DUMMY CODE: gradient of data error function for second layer
-    W1=eta * (nablaED_1 + lmbda_by_N * W1)                                        # REPLACE DUMMY CODE: update weights for first layer with "weight decay" regularization
-    W2=eta * (nablaED_2 + lmbda_by_N * W2)                                        # REPLACE DUMMY CODE: update weights for second layer with "weight decay" regularization
+    W1=W1*(1.0-lmbda_by_N*eta)-eta*nablaED_1                                        # REPLACE DUMMY CODE: update weights for first layer with "weight decay" regularization
+    W2=W2*(1.0-lmbda_by_N*eta)-eta*nablaED_2                                        # REPLACE DUMMY CODE: update weights for second layer with "weight decay" regularization
     return W1,W2                                 # return new weights
 
 def getError(W1,W2,X,T,lmbda=0,flagBiasUnit=1): # compute total crossentropy error function over whole data set (X,T) for MLP with weight layers W1,W2
@@ -150,43 +150,76 @@ if __name__ == '__main__':
     print("T=",T)
 
     # (ii) Train MLP
-    M=6                                # number of hidden units
-    flagBiasUnit=1                     # add an extra bias unit to hidden units?
-    M_total=M                          # total number of hidden units...
-    if flagBiasUnit>0: M_total=M+1     # ... including the bias unit?
-    eta=0.1                            # learning rate
-    lmbda=0.0                            # regularization coefficient
-    nEpochs=10000                        # number of learning epochs
-    contlevels=[-1,0,1]                # plot contour levels (of log-odds-ratio)
-    epochs4plot=[nEpochs-1] # learning epochs for which a plot will be made
-    gridX,gridY = np.meshgrid(np.arange(-3,5,0.1),np.arange(-3,3,0.1))  # mesh grid for plot
-    W1=1.0*(np.random.rand(M,D)-0.5)       # initialize weights of layer 1 randomly 
-    W2=1.0*(np.random.rand(K,M_total)-0.5) # initialize weights of layer 2 randomly
-    E=getError(W1,W2,X,T,lmbda)
-    print("initial error E=",E)
-    if -1 in epochs4plot: plotDecisionSurface(W1,W2,gridX,gridY,X1,X2,contlevels,-1,flagBiasUnit)
-    starttime = time.time()  # start time for training
-    lastLocalError=None
-    for epoch in range(nEpochs):       # loop over learning epochs
-        errc = 0                       # initialize classification errors with zero
-        for n in range(N):             # loop over all training data        
-            xn=X[n,:]                  # n-th data vector
-            tn=T[n,:]                  # n-th target value
-            yn=forwardPropagateActivity(xn,W1,W2)[1]  # test training vector xn
-            yhat,that=2,2              # initialize class labels 
-            if(tn[0]>=tn[1]): that=1   # actual class label
-            if(yn[0]>=yn[1]): yhat=1   # predicted class by MLP 
-            if(yhat!=that): errc=errc+1                                   # count classification error
-            W1,W2=doLearningStep(W1,W2,xn,tn,eta,lmbda/N) # do one backprop learning update of weights
-        E=getError(W1,W2,X,T)
-        print("after epoch ", epoch, " error function E=",E, " and classification errors = ", errc)
-        if lastLocalError is None or (lastLocalError>E and np.absolute(E-lastLocalError)>1e-3): # if error function has decreased
-            lastLocalError=E
-            print("Epoch ",epoch,": Error E=",E,end="\r")
-        else:
-            break # stop learning if error function does not decrease anymore
-    endtime = time.time()  # end time for training
-    plotDecisionSurface(W1,W2,gridX,gridY,X1,X2,contlevels,epoch,flagBiasUnit)
-    print("Training finished after ", nEpochs, " epochs in ", endtime-starttime, " seconds")
-plt.show()
+    M=[14]                                # number of hidden units
+    eta=[1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]                            # learning rate
+    lmbda=[0.9, 0.75, 0.5, 0.25, 0.1, 0.01, 0.001]                            # regularization coefficient
+    bestM=None
+    bestEta=None
+    bestW1=None
+    bestW2=None
+    bestLmbda=None
+    lastError=None
+    lastErrc=None
+    bestCEpochs=None
+    for m in M:                                # loop over number of hidden units
+        for e in eta:                                  # loop over learning rates
+            for l in lmbda:                            # loop over regularization coefficients
+                flagBiasUnit=1                     # add an extra bias unit to hidden units?
+                M_total=m                          # total number of hidden units...
+                if flagBiasUnit>0: M_total=m+1     # ... including the bias unit?
+                nEpochs=500000                        # number of learning epochs
+                contlevels=[-1,0,1]                # plot contour levels (of log-odds-ratio)
+                epochs4plot=[nEpochs-1] # learning epochs for which a plot will be made [nEpochs-1]
+                gridX,gridY = np.meshgrid(np.arange(-3,5,0.1),np.arange(-3,3,0.1))  # mesh grid for plot
+                W1=1.0*(np.random.rand(m,D)-0.5)       # initialize weights of layer 1 randomly 
+                W2=1.0*(np.random.rand(K,M_total)-0.5) # initialize weights of layer 2 randomly
+                E=getError(W1,W2,X,T,l)
+                if -1 in epochs4plot: plotDecisionSurface(W1,W2,gridX,gridY,X1,X2,contlevels,-1,flagBiasUnit)
+                lastLocalError=None
+                starttime = time.time()  # start time for learning
+                for epoch in range(nEpochs):       # loop over learning epochs
+                    errc = 0                       # initialize classification errors with zero
+                    for n in range(N):             # loop over all training data        
+                        xn=X[n,:]                  # n-th data vector
+                        tn=T[n,:]                  # n-th target value
+                        yn=forwardPropagateActivity(xn,W1,W2)[1]  # test training vector xn
+                        yhat,that=2,2              # initialize class labels 
+                        if(tn[0]>=tn[1]): that=1   # actual class label
+                        if(yn[0]>=yn[1]): yhat=1   # predicted class by MLP 
+                        if(yhat!=that): errc=errc+1                                   # count classification error
+                        W1,W2=doLearningStep(W1,W2,xn,tn,e,l/N) # do one backprop learning update of weights
+                    E=getError(W1,W2,X,T)
+                    if lastLocalError is None or (lastLocalError>E and np.absolute(E-lastLocalError)>1e-3): # if error function has decreased
+                        lastLocalError=E
+                        print("Epoch ",epoch,": Error E=",E,end="\r")
+                    else:
+                        break # stop learning if error function does not decrease anymore
+
+                endtime = time.time()
+                if epoch == nEpochs-1: # only plot decision surface for last epoch
+                    print("MAXIMUM NUMBER OF EPOCHS REACHED: ", nEpochs)                    
+                
+                print("After training MLP with m=",m," and eta=",e," and lmbda=",l," the error E=",E, " and classification errors = ", errc)
+                if lastError is None or errc<lastErrc or (errc==lastErrc and E<lastError):
+                    # found better MLP with less classification errors or same errors but smaller error function
+                    lastError=E
+                    lastErrc=errc
+                    print("Found better MLP with m=",m," and eta=",e," and lmbda=",l," with error E=",E, " and classification errors = ", errc, " after ", epoch, " epochs")
+                    bestM=m
+                    bestEta=e
+                    bestW1=W1
+                    bestW2=W2
+                    bestLmbda=l
+                    bestCEpochs=epoch
+                    bestTime=endtime-starttime
+                    # plotDecisionSurface(W1,W2,gridX,gridY,X1,X2,contlevels,epoch,flagBiasUnit)
+                    # plt.show()
+    print("Best MLP with m=",bestM," and eta=",bestEta," and lmbda=",bestLmbda," has error E=", lastError, " and classification errors = ", lastErrc, " after ", bestCEpochs, " epochs", " and took ", bestTime, " seconds to train.")
+    print("Final weights:")
+    print("W1=",bestW1)
+    print("W2=",bestW2)
+    plotDecisionSurface(bestW1,bestW2,gridX,gridY,X1,X2,contlevels,bestCEpochs,flagBiasUnit)
+    plt.show()  # show final plot of decision surface
+
+
 
