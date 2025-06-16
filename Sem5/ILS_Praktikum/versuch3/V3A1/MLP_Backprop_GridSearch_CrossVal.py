@@ -155,9 +155,10 @@ if __name__ == '__main__':
     print("T=",T)
 
     # (ii) Train MLP
-    M=[14]                                # number of hidden units
-    eta=[1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]                            # learning rate
-    lmbda=[0.9, 0.75, 0.5, 0.25, 0.1, 0.01, 0.001]                            # regularization coefficient
+    S=3
+    M=range(1,15)                                # number of hidden units
+    eta=[1e-3, 1e-4, 1e-5]                            # learning rate
+    lmbda=[0, 0.1]                            # regularization coefficient
     bestM=None
     bestEta=None
     bestW1=None
@@ -182,23 +183,39 @@ if __name__ == '__main__':
                 if -1 in epochs4plot: plotDecisionSurface(W1,W2,gridX,gridY,X1,X2,contlevels,-1,flagBiasUnit)
                 lastLocalError=None
                 starttime = time.time()  # start time for learning
-                for epoch in range(nEpochs):       # loop over learning epochs
-                    errc = 0                       # initialize classification errors with zero
-                    for n in range(N):             # loop over all training data        
-                        xn=X[n,:]                  # n-th data vector
-                        tn=T[n,:]                  # n-th target value
-                        yn=forwardPropagateActivity(xn,W1,W2)[1]  # test training vector xn
-                        yhat,that=2,2              # initialize class labels 
-                        if(tn[0]>=tn[1]): that=1   # actual class label
-                        if(yn[0]>=yn[1]): yhat=1   # predicted class by MLP 
-                        if(yhat!=that): errc=errc+1                                   # count classification error
-                        W1,W2=doLearningStep(W1,W2,xn,tn,e,l/N) # do one backprop learning update of weights
-                    E=getError(W1,W2,X,T)
-                    if lastLocalError is None or (lastLocalError>E and np.absolute(E-lastLocalError)>1e-3): # if error function has decreased
-                        lastLocalError=E
-                        print("Epoch ",epoch,": Error E=",E,end="\r")
-                    else:
-                        break # stop learning if error function does not decrease anymore
+                perm = np.random.permutation(N)
+                idxS = [range(i*N//S,(i+1)*N//S) for i in range(S)] # indexes for dividing data set into S parts of equal size
+                valMatCp = np.zeros((K,K))                   # initialize confusion probability matrix Cp[i,j]=pr[true class i and predicted class j] 
+                valErr = 0
+                bestValErr = 0
+                for idxVal in idxS:                                 # loop over all S validation data sets
+                    # (i) generate training and testing data sets and train classifier        
+                    if S>1: idxTrain = [i for i in range(N) if i not in idxVal]               # remaining indices (not in idxVal) are training data
+                    else  : idxTrain = idxVal                                                 # if S==1 use entire data set for training and validation
+                    for epoch in range(nEpochs):       # loop over learning epochs
+                        errc = 0                       # initialize classification errors with zero       
+                        xn=X[perm[idxTrain]]                  # n-th data vector
+                        tn=T[perm[idxTrain]]                  # n-th target value
+                        for idx,_ in enumerate(xn):  # loop over all training indexes
+                            yn=forwardPropagateActivity(xn[idx],W1,W2)[1]  # test training vector xn
+                            yhat,that=2,2              # initialize class labels 
+                            if(tn[idx][0]>=tn[idx][1]): that=1   # actual class label
+                            if(yn[0]>=yn[1]): yhat=1   # predicted class by MLP 
+                            if(yhat!=that): errc=errc+1                                   # count classification error
+                            W1,W2=doLearningStep(W1,W2,xn[idx],tn[idx],e,l/N) # do one backprop learning update of weights
+                            for i in range(len(idxVal)):  # loop over all validation indexes
+                                y_hat = np.argmax(forwardPropagateActivity(X[perm[i]], W1, W2)[1])     # predicted class of i-th input vector from validation set 
+                                t_true = np.argmax(T[perm[i]])                     # corresponding true class label
+                                valMatCp[t_true,y_hat]+=1                  # increase component of confusion matrix 
+                                if(y_hat!=t_true): valErr+=1               # increase counter of errors
+                            valMatCp=(1.0/N)*valMatCp    # divide by data number to get confusion probability matrix
+                            valErr=valErr/float(N)       # divide by data number to get error probability 
+                        E=getError(W1,W2,X,T)
+                        if lastLocalError is None or (lastLocalError>E and np.absolute(E-lastLocalError)>1e-3): # if error function has decreased
+                            lastLocalError=E
+                            print(f"Epoch {epoch}: Err={E}, ValErr={valErr}",end="\r")
+                        else:
+                            break # stop learning if error function does not decrease anymore
 
                 endtime = time.time()
                 if epoch == nEpochs-1: # only plot decision surface for last epoch
@@ -209,7 +226,7 @@ if __name__ == '__main__':
                     # found better MLP with less classification errors or same errors but smaller error function
                     lastError=E
                     lastErrc=errc
-                    print("Found better MLP with m=",m," and eta=",e," and lmbda=",l," with error E=",E, " and classification errors = ", errc, " after ", epoch, " epochs")
+                    print("Found better MLP with m=",m," and eta=",e," and lmbda=",l," with error E=",E," valErr=",valErr, " and classification errors = ", errc, " after ", epoch, " epochs")
                     bestM=m
                     bestEta=e
                     bestW1=W1
@@ -217,9 +234,10 @@ if __name__ == '__main__':
                     bestLmbda=l
                     bestCEpochs=epoch
                     bestTime=endtime-starttime
+                    bestValErr=valErr
                     # plotDecisionSurface(W1,W2,gridX,gridY,X1,X2,contlevels,epoch,flagBiasUnit)
                     # plt.show()
-    print("Best MLP with m=",bestM," and eta=",bestEta," and lmbda=",bestLmbda," has error E=", lastError, " and classification errors = ", lastErrc, " after ", bestCEpochs, " epochs", " and took ", bestTime, " seconds to train.")
+    print("Best MLP with m=",bestM," and eta=",bestEta," and lmbda=",bestLmbda," has error E=", lastError," valErr=",bestValErr, " and classification errors = ", lastErrc, " after ", bestCEpochs, " epochs", " and took ", bestTime, " seconds to train.")
     print("Final weights:")
     print("W1=",bestW1)
     print("W2=",bestW2)
